@@ -82,7 +82,6 @@ public class GameDataFiles {
 				}
 			}
 			
-			
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {

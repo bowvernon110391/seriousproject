@@ -231,11 +231,9 @@ public class MainWindow {
 				int ret = jfc.showOpenDialog(frmGameEditor);
 				
 				if (ret == JFileChooser.APPROVE_OPTION) {
-					String filename = jfc.getSelectedFile().getAbsolutePath();
-					MeshFile m = new MeshFile(filename);
-					
+					String filename = jfc.getSelectedFile().getAbsolutePath();					
 					//logger.log(m.toString());
-					edt.testMesh(m);
+					edt.testMesh(filename);
 				}
 			}
 		});

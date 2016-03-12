@@ -23,6 +23,7 @@ public class Editor implements ScriptCmdListener {
 	//local private variable
 	private GLJPanel canvas;
 	private FPSAnimator ticker;
+	private GL2 context = null;
 	
 	//editor settings
 	//--playback and timer
@@ -95,6 +96,7 @@ public class Editor implements ScriptCmdListener {
 			}
 			
 			public void init(GLAutoDrawable drawable) {
+				context = drawable.getGL().getGL2();
 				editor.canvasInit(drawable.getGL().getGL2());				
 			}
 			
@@ -110,9 +112,10 @@ public class Editor implements ScriptCmdListener {
 		//also, start the fps animator
 		ticker = new FPSAnimator(renderPerSec);
 		ticker.add(canvas);
-		
-		//set default screen to mesh
-		selectView(SCREEN_MESH_VIEW);
+	}
+	
+	public GL2 getContext() {
+		return context;
 	}
 	
 	public Logger getLogger() {
@@ -121,11 +124,12 @@ public class Editor implements ScriptCmdListener {
 	
 	//this initialize canvas
 	public void canvasInit(GL2 gl) {	
-		gl.glClearColor(0.5f, 0.2f, 0.5f, 0.0f);
-		gl.glDisable(GL2.GL_DEPTH_TEST);
-		
+		gl.glClearColor(0.5f, 0.2f, 0.5f, 0.0f);		
 		//start animating
 		ticker.start();
+//		logger.log("editor initialized");
+		//set default screen to mesh
+		selectView(SCREEN_MESH_VIEW);
 	}
 	
 	//this select screen
@@ -240,13 +244,13 @@ public class Editor implements ScriptCmdListener {
 		panel.add(canvas);
 	}
 	
-	public void testMesh(MeshFile meshfile) {
+	public void testMesh(String filename) {
 		selectView(SCREEN_MESH_VIEW);
 		
 		MeshView m = (MeshView) getCurrentView();
-		m.setMesh(meshfile);
+		m.setMesh(new Mesh(filename, context));
 		
-		logger.log(meshfile.toString());
+		logger.log(filename.toString());
 	}
 	
 	public void setupCamera(GL2 gl) {

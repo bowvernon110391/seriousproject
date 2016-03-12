@@ -32,46 +32,20 @@ public class MeshView extends Screen {
 	private Trackball tracker = new Trackball();
 	
 	//current mesh to be viewed
-	private MeshFile curMesh = null;
+	private Mesh curMesh = null;
 	
-	//default cube data
-	private float [] colors = {
-			1, 0, 0,
-			0, 1, 0,
-			0, 0, 1,
-			1, 1, 0,
-			1, 0, 1,
-			0, 1, 1,
-			1, 0.5f,0,
-			0.5f, 1, 0.25f
-	};
-	
-	private float [] vertices = {
-			-1, -1, 1,
-			1, -1, 1,
-			1, 1, 1,
-			-1, 1, 1,
-			
-			-1, -1, -1,
-			1, -1, -1,
-			1, 1, -1,
-			-1, 1, -1
-	};
-	
-	private short [] indices = {
-		0, 1, 2, 0, 2, 3,	//front
-		1, 5, 6, 1, 6, 2,	//right
-		3, 2, 6, 3, 6, 7,	//top
-		4, 0, 3, 4, 3, 7,	//left
-		5, 4, 7, 5, 7, 6,	//back
-		0, 4, 5, 0, 5, 1	//bottom
-	};
+	//default cube mesh
+	private Mesh cubeMesh = null;
 	
 	public MeshView(Editor p) {
 		super(p);
 	}
 	
-	public void setMesh(MeshFile m) {
+	public void drawSimpleCube() {
+		//different format, so need different approach
+	}
+	
+	public void setMesh(Mesh m) {
 		curMesh = m;
 	}
 	
@@ -94,20 +68,54 @@ public class MeshView extends Screen {
 		Matrix4 mat = new Matrix4(rot, new Vector3(0, 0, -cam_dist));
 		
 		gl.glMultMatrixf(mat.m, 0);
-		
-		if (curMesh == null) {
-			gl.glBegin(GL2.GL_TRIANGLES);
-				for(int i=0; i<indices.length; i++) {
-					gl.glColor3fv(colors, indices[i]*3);
-					gl.glVertex3fv(vertices, indices[i]*3);
-				}
-			gl.glEnd();
-		} else {
-			//there's a mesh, render it
-			curMesh.renderSimple(gl);
-		}
 	}
 	
+	@Override
+	public void onActive() {
+		//it's safe to create shit here since gl context is valid
+		if (cubeMesh == null) {
+			//color first, then vertex
+			float [] vertices = {
+					//colors
+					1, 0, 0,
+					0, 1, 0,
+					0, 0, 1,
+					1, 1, 0,
+					1, 0, 1,
+					0, 1, 1,
+					1, 0.5f,0,
+					0.5f, 1, 0.25f,
+					
+					//vertices
+					-1, -1, 1,
+					1, -1, 1,
+					1, 1, 1,
+					-1, 1, 1,
+					
+					-1, -1, -1,
+					1, -1, -1,
+					1, 1, -1,
+					-1, 1, -1
+			};
+			
+			short [] indices = {
+				0, 1, 2, 0, 2, 3,	//front
+				1, 5, 6, 1, 6, 2,	//right
+				3, 2, 6, 3, 6, 7,	//top
+				4, 0, 3, 4, 3, 7,	//left
+				5, 4, 7, 5, 7, 6,	//back
+				0, 4, 5, 0, 5, 1	//bottom
+			};
+			
+			cubeMesh = Mesh.buildSimpleCube(parent.getContext(), vertices, indices);
+		}
+			
+	}
+	
+	@Override
+	public void onDeactive() {
+		
+	}
 	
 	@Override
 	public void mousePressed(MouseEvent arg0) {
