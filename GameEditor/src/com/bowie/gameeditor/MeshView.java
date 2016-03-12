@@ -91,7 +91,7 @@ public class MeshView extends Screen {
 		gl.glLoadIdentity();
 		
 		Quaternion rot = tracker.getRotation();
-		Matrix4 mat = new Matrix4(rot, new Vector3(0, 0, -5.0f));
+		Matrix4 mat = new Matrix4(rot, new Vector3(0, 0, -cam_dist));
 		
 		gl.glMultMatrixf(mat.m, 0);
 		
