@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import com.jogamp.opengl.util.texture.Texture;
-import com.jogamp.opengl.util.texture.TextureData;
 import com.jogamp.opengl.util.texture.TextureIO;
 
 /**

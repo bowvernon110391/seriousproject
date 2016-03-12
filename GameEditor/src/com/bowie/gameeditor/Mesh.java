@@ -1,6 +1,5 @@
 package com.bowie.gameeditor;
 
-import java.awt.image.IndexColorModel;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
@@ -8,7 +7,6 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.jogamp.common.nio.ByteBufferInputStream;
 import com.jogamp.opengl.GL2;
 
 public class Mesh {

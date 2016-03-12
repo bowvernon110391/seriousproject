@@ -1,7 +1,5 @@
 package com.bowie.gameeditor;
 
-import java.util.Arrays;
-
 public class Matrix3 {
 	
 	public float [] m = new float[9];

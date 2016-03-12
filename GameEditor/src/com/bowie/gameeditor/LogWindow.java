@@ -1,13 +1,6 @@
 package com.bowie.gameeditor;
 
-import java.awt.EventQueue;
-
 import javax.swing.JDialog;
-import javax.swing.JFrame;
-
-import java.awt.Dialog.ModalExclusionType;
-import java.awt.Dialog.ModalityType;
-
 import javax.swing.JScrollPane;
 
 import java.awt.BorderLayout;
@@ -16,8 +9,6 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import java.awt.Color;
-
-import javax.swing.border.EtchedBorder;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;

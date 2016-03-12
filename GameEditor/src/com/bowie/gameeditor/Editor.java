@@ -1,12 +1,8 @@
 package com.bowie.gameeditor;
 
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.nio.ByteOrder;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.BiConsumer;
 import java.util.zip.ZipEntry;
 
 import javax.swing.JPanel;
@@ -296,9 +292,9 @@ public class Editor implements ScriptCmdListener {
 		gdf = new GameDataFiles(filename);
 		
 		//log em
-		Iterator it = gdf.getFileMap(GameDataFiles.TYPE_ALL).entrySet().iterator();
+		Iterator<Entry<String, ZipEntry>> it = gdf.getFileMap(GameDataFiles.TYPE_ALL).entrySet().iterator();
 		while (it.hasNext()) {
-			Map.Entry pair = (Entry) it.next();
+			Map.Entry<?, ?> pair = it.next();
 			
 			ZipEntry f = (ZipEntry) pair.getValue();
 			
@@ -314,5 +310,10 @@ public class Editor implements ScriptCmdListener {
 		logger.log("You entered: " + cmdString);
 		//1st, parse
 		//2nd, execute
+	}
+
+	public void testTexture(String filename) {
+		MeshView m = (MeshView) getCurrentView();
+		m.setTexture(filename);
 	}
 }

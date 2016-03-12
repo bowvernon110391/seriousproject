@@ -36,6 +36,10 @@ public class MeshView extends Screen {
 	private boolean meshReloading = false;
 	private String meshFilename = "";
 	
+	private Texture2D curTex = null;
+	private boolean texReloading = false;
+	private String texFilename = "";
+	
 	//default cube mesh
 	private Mesh cubeMesh = null;
 	
@@ -52,6 +56,11 @@ public class MeshView extends Screen {
 		meshReloading = true;
 	}
 	
+	public void setTexture(String filename) {
+		texFilename = filename;
+		texReloading = true;
+	}
+	
 	@Override
 	public void onResize(GL2 gl, int x, int y, int w, int h) {
 		parent.getLogger().log("Mesh View resized!! " + x + ", " + y + ", " + w + " , " + h);
@@ -59,6 +68,11 @@ public class MeshView extends Screen {
 		
 		//reset gl status
 		gl.glEnable(GL2.GL_DEPTH_TEST);
+		gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+		
+		gl.glFrontFace(GL2.GL_CCW);
+		gl.glEnable(GL2.GL_CULL_FACE);
+		gl.glCullFace(GL2.GL_BACK);
 	}
 
 	@Override
@@ -71,6 +85,15 @@ public class MeshView extends Screen {
 			
 //			System.out.println("Well shit");
 			parent.getLogger().log(curMesh.toString());
+		}
+		
+		if (texReloading) {
+			texReloading = false;
+			parent.getLogger().log("reloading texture: " + texFilename);
+			
+			curTex = new Texture2D(texFilename, true);
+			curTex.getTexture().setTexParameterf(gl, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_LINEAR_MIPMAP_LINEAR);
+			curTex.getTexture().setTexParameterf(gl, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_LINEAR);
 		}
 		
 		if (cubeMesh == null) {
@@ -142,6 +165,13 @@ public class MeshView extends Screen {
 		gl.glEnableClientState(GL2.GL_NORMAL_ARRAY);
 		gl.glEnableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
 		
+		//enable texturing if possible
+		if (curTex != null) {
+			gl.glEnable(GL2.GL_TEXTURE_2D);
+			curTex.getTexture().bind(gl);
+			gl.glEnable(GL2.GL_BLEND);;
+		}
+		
 		if (curMesh != null) {
 			gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
 			
@@ -160,6 +190,9 @@ public class MeshView extends Screen {
 			gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, cubeMesh.getIBO());
 			gl.glDrawElements(GL2.GL_TRIANGLES, 36, GL2.GL_UNSIGNED_SHORT, 0);
 		}
+		
+		gl.glDisable(GL2.GL_TEXTURE_2D);
+		gl.glDisable(GL2.GL_BLEND);
 		
 		gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
 		gl.glDisableClientState(GL2.GL_NORMAL_ARRAY);
