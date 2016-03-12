@@ -1,5 +1,6 @@
 package com.bowie.gameeditor;
 
+import java.awt.image.IndexColorModel;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
@@ -26,6 +27,8 @@ public class Mesh {
 	private int elemPerVertex = 8;
 	private int bytesPerVertex = 32;
 	private String [] meshMaterialName;
+	
+	public boolean hasData = false;
 
 	public Mesh(String filename, GL2 context) {
 		byte [] b = Helper.getBytesFromFile(filename);
@@ -113,6 +116,8 @@ public class Mesh {
 		indexSize = new int[meshCount];
 		indexByteOffset = new int[meshCount];
 		
+		List<Short> tmpIndexBuffer = new ArrayList<>();
+		
 		int totalIndices = 0;	//for tracking and globbing index data
 		
 		byte [] tmpBuf = new byte[32];
@@ -132,42 +137,75 @@ public class Mesh {
 			totalIndices += indexCount;
 			
 			//3rd, allocate indices and read em
-			ByteBuffer bb = ByteBuffer.allocateDirect(2 * indexCount).order(ByteOrder.nativeOrder());
-			ShortBuffer sb = bb.asShortBuffer(); 
-			/*meshIndices[i] = new short[meshIndexCount[i]];*/
+//			ByteBuffer bb = ByteBuffer.allocateDirect(2 * indexCount).order(ByteOrder.nativeOrder());
+//			ShortBuffer sb = bb.asShortBuffer(); 
+//			/*meshIndices[i] = new short[meshIndexCount[i]];*/
+//			
+//			for (int j=0; j<indexCount; j++) {
+//				sb.put(buffer.getShort());
+//			}
+//			//flip and store
+//			sb.flip();
+//			meshIndices.add(sb);
 			
 			for (int j=0; j<indexCount; j++) {
-				sb.put(buffer.getShort());
+				tmpIndexBuffer.add(buffer.getShort());
 			}
-			//flip and store
-			sb.flip();
-			meshIndices.add(sb); 
 		}
 		
 		//join all indices into one
-		ByteBuffer indexData = ByteBuffer.allocateDirect(2 * totalIndices).order(ByteOrder.nativeOrder());
-		for (ShortBuffer sb : meshIndices) {
-			indexData.asShortBuffer().put(sb);
-		}
-		indexData.flip();
+		ByteBuffer indexData = ByteBuffer.allocateDirect(2 * tmpIndexBuffer.size()).order(ByteOrder.nativeOrder());
+		indexData.clear();
 		
-		return createVertexBuffer(context, vertexData, indexData.asShortBuffer());
+		//copy data
+		short [] tmpBuffer = new short[tmpIndexBuffer.size()];
+		for(int i=0; i<tmpIndexBuffer.size(); i++) {
+			tmpBuffer[i] = tmpIndexBuffer.get(i);
+		}
+		
+		indexData.asShortBuffer().put(tmpBuffer);
+		indexData.clear();
+		
+		hasData =  createVertexBuffer(context, vertexData, indexData.asShortBuffer());
+		return hasData;
 	}
 	
+//	public int lastErr = GL2.GL_NO_ERROR;
+	
 	private boolean createVertexBuffer(GL2 gl, ByteBuffer vertexData, ShortBuffer indexData) {
+		System.out.println("Creating vb: " + vertexData.capacity() + " , " + indexData.capacity());
 		//check for sanity
 		if (vertexData.limit() == 0 || indexData.limit() == 0) {
 			return false;
 		}
 
 		//VBO
+		int [] tmp = {-1};
+		gl.glGenBuffers(1, tmp, 0);
+		
 		gl.glGenBuffers(1, vbo, 0);
+		System.out.println("Generated VBO: " + vbo[0]);
+		/*if (!gl.glIsBuffer(vbo[0])) {
+			return false;
+		}*/
+		//check
+		/*if ( (lastErr=gl.glGetError()) != GL2.GL_NO_ERROR) {
+			return false;
+		}*/
 		//now supply data as static
 		gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo[0]);
 		gl.glBufferData(GL2.GL_ARRAY_BUFFER, vertexData.limit(), vertexData, GL2.GL_STATIC_DRAW);
 		
 		//IBO
 		gl.glGenBuffers(1, ibo, 0);
+		System.out.println("Generated IBO: " + ibo[0]);
+		/*if (!gl.glIsBuffer(ibo[0])) {
+			return false;
+		}*/
+		//check
+		/*if ( (lastErr=gl.glGetError()) != GL2.GL_NO_ERROR) {
+			return false;
+		}*/
 		//now supply data as static
 		gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, ibo[0]);
 		gl.glBufferData(GL2.GL_ELEMENT_ARRAY_BUFFER, indexData.limit() * 2, indexData, GL2.GL_STATIC_DRAW);
@@ -179,14 +217,12 @@ public class Mesh {
 			indexCount[i] = indexData.get(i).limit();
 		}*/
 		
-		return false;
+		return true;
 	}
 	
 	//this shit draw itself
 	public void renderSimple(GL2 gl) {
-		gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
-		gl.glEnableClientState(GL2.GL_NORMAL_ARRAY);
-		gl.glEnableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+		
 		//teh position
 		
 		gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo[0]);
@@ -202,16 +238,22 @@ public class Mesh {
 		
 		//now for the index
 		gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, ibo[0]);
-		for (int i=0; i<ibo.length; i++) {
+		for (int i=0; i<indexSize.length; i++) {
 			gl.glDrawElements(GL2.GL_TRIANGLES, indexSize[i], GL2.GL_UNSIGNED_SHORT, indexByteOffset[i]);
 		}
 		/*for (ShortBuffer sb : meshIndices) {
 			gl.glDrawElements(GL2.GL_TRIANGLES, sb.limit(), GL2.GL_UNSIGNED_SHORT, sb);
 		}*/
 		
-		gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
-		gl.glDisableClientState(GL2.GL_NORMAL_ARRAY);
-		gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+		
+	}
+	
+	public int getVBO() {
+		return vbo[0];
+	}
+	
+	public int getIBO() {
+		return ibo[0];
 	}
 	
 	 static public Mesh buildSimpleCube(GL2 gl, float [] vertex, short [] indices) {
@@ -219,12 +261,31 @@ public class Mesh {
 		 
 		 ByteBuffer vData = ByteBuffer.allocateDirect(4 * vertex.length).order(ByteOrder.nativeOrder());
 		 vData.asFloatBuffer().put(vertex);
-		 vData.flip();
+		 vData.clear();
 		 
 		 ShortBuffer iData = ShortBuffer.wrap(indices);
+		 iData.clear();
 		 
 		 m.createVertexBuffer(gl, vData, iData);
 		 
+		 //set auxiliary data
+		 m.indexSize = new int []{0};
+		 m.indexByteOffset = new int []{0};
+		 
 		 return m;
 	 }
+	 
+	 @Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("vbo: " + vbo[0] + " , " + "ibo: " + ibo[0] + " meshCount: " + indexSize.length + "\r\n ");
+		for (int i=0; i<indexSize.length; i++) {
+			sb.append(" " + i + ": indexCount: " + indexSize[i] + " , offset(bytes): " + indexByteOffset[i] + "\r\n");
+		}
+		
+//		sb.append("lastError: " + lastErr);
+		
+		return sb.toString();
+	}
 }

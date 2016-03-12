@@ -1,8 +1,7 @@
 Editor spawned!
 editor attached to canvas panel
 Mesh View resized!! 0, 0, 540 , 442
-Mesh View resized!! 0, 0, 540 , 441
-Mesh View resized!! 0, 0, 540 , 436
-Mesh View resized!! 0, 0, 540 , 423
-Mesh View resized!! 0, 0, 540 , 418
+vbo: 3 , ibo: 4 meshCount: 1
+  0: indexCount: 0 , offset(bytes): 0
+
 Well we're finished

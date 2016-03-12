@@ -14,7 +14,9 @@ import javax.swing.JPanel;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLCapabilities;
+import com.jogamp.opengl.GLContext;
 import com.jogamp.opengl.GLEventListener;
+import com.jogamp.opengl.GLException;
 import com.jogamp.opengl.GLProfile;
 import com.jogamp.opengl.awt.GLJPanel;
 import com.jogamp.opengl.util.FPSAnimator;
@@ -24,6 +26,7 @@ public class Editor implements ScriptCmdListener {
 	private GLJPanel canvas;
 	private FPSAnimator ticker;
 	private GL2 context = null;
+	private GLContext rawContext = null;
 	
 	//editor settings
 	//--playback and timer
@@ -72,7 +75,7 @@ public class Editor implements ScriptCmdListener {
 	//--test variable
 	private float a = 0.0f;
 	
-	public Editor(Logger l) {
+	public Editor(Logger l) throws GLException {
 		final Editor editor = this;
 		
 		//attach logger
@@ -84,7 +87,20 @@ public class Editor implements ScriptCmdListener {
 		
 		//create canvas
 		GLProfile glp = GLProfile.getDefault();
+		if (!glp.hasGLSL()) {
+			throw new GLException("Fuck this device can't use shaders!!");
+		}
+		//set cap
+//		GLProfile glp = GLProfile.getGL2ES2();
 		GLCapabilities glcap = new GLCapabilities(glp);
+		
+		glcap.setHardwareAccelerated(true);
+		glcap.setDepthBits(24);
+		glcap.setDoubleBuffered(true);
+		glcap.setRedBits(8);
+		glcap.setGreenBits(8);
+		glcap.setBlueBits(8);
+		glcap.setAlphaBits(8);
 		
 		canvas = new GLJPanel(glcap);
 		
@@ -124,6 +140,10 @@ public class Editor implements ScriptCmdListener {
 	
 	//this initialize canvas
 	public void canvasInit(GL2 gl) {	
+		if (context == null) {
+			context = gl;
+		}
+		
 		gl.glClearColor(0.5f, 0.2f, 0.5f, 0.0f);		
 		//start animating
 		ticker.start();
@@ -248,9 +268,7 @@ public class Editor implements ScriptCmdListener {
 		selectView(SCREEN_MESH_VIEW);
 		
 		MeshView m = (MeshView) getCurrentView();
-		m.setMesh(new Mesh(filename, context));
-		
-		logger.log(filename.toString());
+		m.setMesh(filename);
 	}
 	
 	public void setupCamera(GL2 gl) {

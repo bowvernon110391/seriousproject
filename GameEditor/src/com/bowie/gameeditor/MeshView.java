@@ -33,6 +33,8 @@ public class MeshView extends Screen {
 	
 	//current mesh to be viewed
 	private Mesh curMesh = null;
+	private boolean meshReloading = false;
+	private String meshFilename = "";
 	
 	//default cube mesh
 	private Mesh cubeMesh = null;
@@ -45,8 +47,9 @@ public class MeshView extends Screen {
 		//different format, so need different approach
 	}
 	
-	public void setMesh(Mesh m) {
-		curMesh = m;
+	public void setMesh(String filename) {
+		meshFilename = filename;
+		meshReloading = true;
 	}
 	
 	@Override
@@ -60,22 +63,37 @@ public class MeshView extends Screen {
 
 	@Override
 	public void onDraw(GL2 gl, float dt) {
-		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
+		if (meshReloading) {
+			meshReloading = false;
+			parent.getLogger().log("Here we should be loading shit: " + meshFilename);
+			
+			curMesh = new Mesh(meshFilename, gl);
+			
+//			System.out.println("Well shit");
+			parent.getLogger().log(curMesh.toString());
+		}
 		
-		gl.glLoadIdentity();
-		
-		Quaternion rot = tracker.getRotation();
-		Matrix4 mat = new Matrix4(rot, new Vector3(0, 0, -cam_dist));
-		
-		gl.glMultMatrixf(mat.m, 0);
-	}
-	
-	@Override
-	public void onActive() {
-		//it's safe to create shit here since gl context is valid
 		if (cubeMesh == null) {
+			//let's change to cylinder
+			float cRad = 1.0f;
+			int cStep = 8;
+			
+			//generate vertices
+			
+			//generate indices
+			
 			//color first, then vertex
 			float [] vertices = {
+					//uv
+					0, 0,
+					1, 0,
+					1, 1,
+					0, 1,
+					1, 0,
+					0, 0,
+					0, 1,
+					1, 1,
+					
 					//colors
 					1, 0, 0,
 					0, 1, 0,
@@ -108,7 +126,50 @@ public class MeshView extends Screen {
 			};
 			
 			cubeMesh = Mesh.buildSimpleCube(parent.getContext(), vertices, indices);
+			parent.getLogger().log(cubeMesh.toString());
 		}
+		
+		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
+		
+		gl.glLoadIdentity();
+		
+		Quaternion rot = tracker.getRotation();
+		Matrix4 mat = new Matrix4(rot, new Vector3(0, 0, -cam_dist));
+		
+		gl.glMultMatrixf(mat.m, 0);
+		
+		gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+		gl.glEnableClientState(GL2.GL_NORMAL_ARRAY);
+		gl.glEnableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+		
+		if (curMesh != null) {
+			gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
+			
+			curMesh.renderSimple(gl);
+		} else if (cubeMesh != null) {
+			gl.glDisableClientState(GL2.GL_NORMAL_ARRAY);
+			gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
+			
+			gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, cubeMesh.getVBO());
+			
+			gl.glTexCoordPointer(2, GL2.GL_FLOAT, 0, 0);
+			gl.glColorPointer(3, GL2.GL_FLOAT, 0, 8*2*4);
+			gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 8*2*4 + 8*3*4);
+			
+			
+			gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, cubeMesh.getIBO());
+			gl.glDrawElements(GL2.GL_TRIANGLES, 36, GL2.GL_UNSIGNED_SHORT, 0);
+		}
+		
+		gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
+		gl.glDisableClientState(GL2.GL_NORMAL_ARRAY);
+		gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+	}
+	
+	@Override
+	public void onActive() {
+		//it's safe to create shit here since gl context is valid
+		
 			
 	}
 	
@@ -164,7 +225,7 @@ public class MeshView extends Screen {
 			
 			tracker.track(arg0.getX(), arg0.getY());
 			
-			Vector3 tmp;
+			/*Vector3 tmp;
 			
 			tmp = tracker.vA;
 			parent.getLogger().log("scA : " + tmp.x + ", " + tmp.y + ", " + tmp.z);
@@ -176,7 +237,7 @@ public class MeshView extends Screen {
 			parent.getLogger().log("DP: " + dp + " angle : " + Math.toDegrees(Math.acos(dp)));
 			
 			Quaternion q = tracker.rot;
-			parent.getLogger().log("qrot: " + q.x + ", " + q.y + ", " + q.z + ", " + q.w);
+			parent.getLogger().log("qrot: " + q.x + ", " + q.y + ", " + q.z + ", " + q.w);*/
 
 			break;
 		}
