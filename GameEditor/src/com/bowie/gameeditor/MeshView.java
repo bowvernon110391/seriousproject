@@ -3,6 +3,7 @@ package com.bowie.gameeditor;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+import java.nio.charset.Charset;
 
 import com.jogamp.opengl.GL2;
 
@@ -96,18 +97,39 @@ public class MeshView extends Screen {
 			curFaceCull = curFaceCull == GL2.GL_BACK ? GL2.GL_FRONT : GL2.GL_BACK;
 			cullModeChanged = true;
 		}
+		
+		if (arg0.getKeyCode() == 'R') {
+			//open up readme files
+			GameDataFiles gdf = parent.getDataFile();
+			if (gdf != null) {
+				byte [] tmpBuf = gdf.getBytes("readme.txt");
+				if (tmpBuf != null) {
+					parent.getLogger().log(new String(tmpBuf, Charset.forName("UTF-8")));
+				}
+			}
+		}
+		
+		if (arg0.getKeyCode() == 'M') {
+			//model test
+			meshReloading = true;
+			meshFilename = "mesh/male_char_proto.bmf";
+		}
 	}
 
 	@Override
 	public void onDraw(GL2 gl, float dt) {
 		if (meshReloading) {
 			meshReloading = false;
-			parent.getLogger().log("Here we should be loading shit: " + meshFilename);
-			
-			curMesh = new Mesh(meshFilename, gl);
-			
-//			System.out.println("Well shit");
-			parent.getLogger().log(curMesh.toString());
+//			parent.getLogger().log("Here we should be loading shit: " + meshFilename);
+//			
+//			curMesh = new Mesh(meshFilename, gl);
+//			
+//			parent.getLogger().log(curMesh.toString());
+			if (parent.getLogger() != null) {
+				curMesh = new Mesh(parent.getDataFile().getBytes(meshFilename), gl);
+			} else {
+				parent.getLogger().log("Datafile not set");
+			}
 		}
 		
 		if (texReloading) {

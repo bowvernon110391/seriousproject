@@ -1,9 +1,14 @@
 package com.bowie.gameeditor;
 
+import java.io.DataInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -74,7 +79,7 @@ public class GameDataFiles {
 				
 				//slash name
 				if (!file.isDirectory()) {
-					allData.put(file.getName(), file);
+					allData.put(file.getName().trim(), file);
 				}
 			}
 			
@@ -83,6 +88,63 @@ public class GameDataFiles {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public boolean isOpen() {
+		return masterFile != null;
+	}
+	
+	public byte [] getBytes(String filename) {
+		filename = filename.trim();
+		//can't do anything
+		if (!isOpen()) {
+			System.out.println("GDF: Well there's no master file opened");
+			return null;
+		}
+		
+//		//let's do extreme compare
+//		System.out.println("GDF: do we have: " + filename + "? " + allData.containsKey(filename));
+//		
+//		Iterator<Entry<String, ZipEntry>> it = allData.entrySet().iterator();
+//		
+//		while (it.hasNext()) {
+//			Map.Entry<?, ?> pair = it.next();
+//			
+//			System.out.println("GDF: '" + pair.getKey() + "' vs '" + filename + "' ? " + pair.getKey().equals(filename));
+//			
+//			it.remove();
+//		}
+		
+		//let's see if we can find such files
+		ZipEntry file = allData.get(filename);
+		//we can't do shit then
+		if (file == null) {
+			System.out.println("GDF: cannot find such file: " + filename);
+			return null;
+		}
+		//found, do the real thing
+		try {
+			InputStream is = masterFile.getInputStream(file);
+			DataInputStream dis = new DataInputStream(is);
+			//allocate enough bytes
+			System.out.println("GDF: allocating for : " + filename + " for " + file.getSize() + " bytes");
+			byte [] buffer = new byte[(int) file.getSize()];
+			//can we do shit?
+			if (buffer == null)
+				throw new IOException("Sheeeiit we run out of memory!!");
+			//yes we can
+			dis.readFully(buffer);
+			dis.close();
+			
+			//yaay we did it
+			return buffer;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		//default shit
+		return null;
 	}
 	
 	public void close() {

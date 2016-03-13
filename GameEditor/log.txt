@@ -7,9 +7,15 @@ glError: 0
 vbo: 2 , ibo: 3 meshCount: 1
   0: indexCount: 0 , offset(bytes): 0
 
-Here we should be loading shit: C:\Users\Bow\Documents\a.bmf
-vbo: 5 , ibo: 6 meshCount: 1
-  0: indexCount: 36 , offset(bytes): 0
+data set: texture/tex_hand.png : 21332 -> 21332
+data set: texture/tex_body.png : 19918 -> 19918
+data set: texture/tex_foot.png : 17506 -> 17506
+data set: texture/tex_head.png : 22071 -> 22071
+data set: texture/tex_eye.png : 14575 -> 27973
+data set: readme.txt : 59 -> 60
+data set: object/male_char.txt : 98 -> 181
+data set: mesh/male_char_proto.bmf : 13839 -> 21558
+look, this is just a test case a'ight?
+well, fuck you too
 
-reloading texture: D:\blender_project\tex_eye.png
 Well we're finished

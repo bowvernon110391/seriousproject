@@ -140,6 +140,10 @@ public class Editor implements ScriptCmdListener {
 		return logger;
 	}
 	
+	public GameDataFiles getDataFile() {
+		return gdf;
+	}
+	
 	//this initialize canvas
 	public void canvasInit(GL2 gl) {	
 		if (context == null) {
@@ -304,7 +308,7 @@ public class Editor implements ScriptCmdListener {
 			
 			logger.log("data set: " + pair.getKey() + " : " + f.getCompressedSize() + " -> " + f.getSize());
 			
-			it.remove();
+//			it.remove();
 		}
 	}
 
