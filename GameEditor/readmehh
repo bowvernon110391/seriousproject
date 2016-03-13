@@ -1,0 +1,12 @@
+This is the design document (sorry):
+===================FILE FORMAT=======================================================
+-(.bmf) is used for static mesh file
+-(.bsmf) is used for skeletal mesh animated file
+-(.skel) is used for the skeleton
+-(.skam) is used for each animation -> linked to the base skeleton
+-(.drawref) is used to describe renderables (instanced per unit though, so some unit can be modifiable)
+
+
+
+==================TODO==============================================================
+-[BMF EXPORTER] : add option to save each mesh separated by material

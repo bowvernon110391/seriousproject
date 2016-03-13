@@ -9,6 +9,6 @@ varying vec3 posMult;
 
 void main() {
 	color = col;
-	posMult = pos * 0.5 + 0.5;
+	posMult = pos;
 	gl_Position = matprojview * matmodel * vec4(pos, 1.0);	
 }

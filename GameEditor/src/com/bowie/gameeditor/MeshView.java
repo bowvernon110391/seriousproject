@@ -97,7 +97,7 @@ public class MeshView extends Screen {
 		gl.glDepthFunc(GL2.GL_LESS);
 		gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
 		
-		gl.glDisable(GL2.GL_CULL_FACE);
+		gl.glEnable(GL2.GL_CULL_FACE);
 		gl.glCullFace(GL2.GL_BACK);
 		gl.glFrontFace(GL2.GL_CCW);
 		gl.glShadeModel(GL2.GL_SMOOTH);
