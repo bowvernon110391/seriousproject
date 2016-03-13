@@ -171,7 +171,7 @@ public class Mesh {
 //	public int lastErr = GL2.GL_NO_ERROR;
 	
 	private boolean createVertexBuffer(GL2 gl, ByteBuffer vertexData, ShortBuffer indexData) {
-		System.out.println("Creating vb: " + vertexData.capacity() + " , " + indexData.capacity());
+//		System.out.println("Creating vb: " + vertexData.capacity() + " , " + indexData.capacity());
 		//check for sanity
 		if (vertexData.limit() == 0 || indexData.limit() == 0) {
 			return false;
@@ -182,7 +182,7 @@ public class Mesh {
 		gl.glGenBuffers(1, tmp, 0);
 		
 		gl.glGenBuffers(1, vbo, 0);
-		System.out.println("Generated VBO: " + vbo[0]);
+//		System.out.println("Generated VBO: " + vbo[0]);
 		/*if (!gl.glIsBuffer(vbo[0])) {
 			return false;
 		}*/
@@ -196,7 +196,7 @@ public class Mesh {
 		
 		//IBO
 		gl.glGenBuffers(1, ibo, 0);
-		System.out.println("Generated IBO: " + ibo[0]);
+//		System.out.println("Generated IBO: " + ibo[0]);
 		/*if (!gl.glIsBuffer(ibo[0])) {
 			return false;
 		}*/

@@ -41,7 +41,7 @@ public class Shader {
 	};
 	
 	//private properties
-	private List<Integer> uniforms = new ArrayList<>(uniformId.length);
+	private List<Integer> uniforms = new ArrayList<>();
 	private int progId = -1;	//each shader program has this
 	private boolean loaded = false;	//not loaded
 	private boolean errord = false;	//not error yet
@@ -58,32 +58,55 @@ public class Shader {
 	}
 	
 	public Shader(GL2 gl, String vsFilename, String fsFilename) {
-		
+		loadShader(gl, Helper.getBytesFromFile(vsFilename), Helper.getBytesFromFile(fsFilename));
+	}
+	
+	public void useShader(GL2 gl) {
+		gl.glUseProgram(progId);
+	}
+	
+	public int getUniformLoc(int id) {
+		if (uniforms.size() <= id)
+			return -1;
+		return uniforms.get(id);
 	}
 	
 	public boolean loadShader(GL2 gl, byte[] vsSource, byte[] fsSource) {
+		System.out.println("attempting to load shader: vsLen = " + vsSource.length + ", fsLen = " + fsSource.length);
 		//first, we compile each shader
 		int vsId = compileShaderSource(gl, GL2.GL_VERTEX_SHADER, vsSource);
 		if (vsId == 0 ) {
+			System.out.println("Shader: VS failed to compile");
 			return false;
 		}
+		System.out.println("Shader: VS id = " + vsId);
+		
 		int fsId = compileShaderSource(gl, GL2.GL_FRAGMENT_SHADER, fsSource);
 		if (fsId == 0) {
+			System.out.println("Shader: FS failed to compile");
 			return false;
 		}
+		System.out.println("Shader: FS id = " + fsId);
 		//then create a program
 		progId = gl.glCreateProgram();
+		System.out.println("created program id: " + progId);
 		if (progId == 0) {
 			System.out.println("Shader: failed creating program");
 			return false;
 		}
 		//attach each shader
+		//bind
+		bindCommonAttributes(gl);
+		//then attach
 		gl.glAttachShader(progId, vsId);
 		gl.glAttachShader(progId, fsId);
+		//test for error
+		System.out.println("Shader: error code = " + gl.glGetError());
 		//bind common attributes
-		bindCommonAttributes(gl);
+//		bindCommonAttributes(gl);
 		//link
 		gl.glLinkProgram(progId);
+		System.out.println("Shader: error code = " + gl.glGetError());
 		//check linking
 		int [] params = new int[1];
 		gl.glGetProgramiv(progId, GL2.GL_LINK_STATUS, params, 0);
@@ -95,6 +118,7 @@ public class Shader {
 		//alright now we query common uniforms
 		//to cache it
 		gl.glUseProgram(progId);
+		queryCommonAttributes(gl);
 		queryCommonUniforms(gl);
 		//return
 		gl.glUseProgram(0);
@@ -154,7 +178,7 @@ public class Shader {
 			return 0;
 		}
 		
-		return 0;
+		return sourceId;
 	}
 	
 	private void queryCommonUniforms(GL2 gl) {
@@ -163,13 +187,23 @@ public class Shader {
 		//manually
 		for (int i=0; i<uniformNames.length; i++) {
 			int loc = gl.glGetUniformLocation(progId, uniformNames[i]);
-			uniforms.set(i, loc);
+			uniforms.add(loc);
 		}
 	}
 	
 	private void bindCommonAttributes(GL2 gl) {
 		for (int i=0; i<attribId.length; i++) {
 			gl.glBindAttribLocation(progId, attribId[i], attribNames[i]);
+//			System.out.println("Shader: error code = " + gl.glGetError());
+//			int attLoc = gl.glGetAttribLocation(progId, attribNames[i]);
+//			System.out.println("attrib: " + attribNames[i] + " : " + attLoc);
+		}
+	}
+	
+	private void queryCommonAttributes(GL2 gl) {
+		for (int i=0; i<attribId.length; i++) {
+			int attLoc = gl.glGetAttribLocation(progId, attribNames[i]);
+			System.out.println("attrib: " + attribNames[i] + " : " + attLoc);
 		}
 	}
 	
@@ -188,5 +222,19 @@ public class Shader {
 	private void setError(String message) {
 		lastError = message;
 		errord = true;
+	}
+	
+	@Override
+	public String toString() {
+		String txt = "Shader id: " + progId + "\r\n";
+		txt+= "Last error: " + lastError + "\r\n";
+		for (int i=0; i<uniforms.size(); i++) {
+			String name = "" + i;
+			if (i < uniformNames.length)
+				name = uniformNames[i];
+			txt += "uniform[" + name + "] = " + uniforms.get(i) + "\r\n";
+		}
+		//get attribute location
+		return txt;
 	}
 }

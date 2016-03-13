@@ -1,4 +1,12 @@
 Editor spawned!
 editor attached to canvas panel
-Shader loaded!!
+Shader id: 3
+Last error: 
+uniform[tex0] = -1
+uniform[tex1] = -1
+uniform[tex2] = -1
+uniform[tex3] = -1
+uniform[matprojview] = 22675456
+uniform[matmodel] = 22740992
+
 Well we're finished

@@ -6,6 +6,8 @@ import java.awt.event.MouseWheelEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.security.CodeSource;
 import java.util.zip.ZipEntry;
@@ -56,6 +58,7 @@ public class MeshView extends Screen {
 	
 	//teh shader
 	boolean shaderReloading = true;
+	Shader curShader = null;
 	
 	//shit camera
 	PerspectiveCamera camera = new PerspectiveCamera();
@@ -64,8 +67,7 @@ public class MeshView extends Screen {
 		super(p);
 		
 		//set default props
-		camera.setPos(-2, 1, 5);
-		camera.setRot(Quaternion.makeAxisRot(new Vector3(0, 1, 0), (float) Math.toRadians(-30)));
+		camera.setPos(0, 0, 5);
 	}
 	
 	public void drawSimpleCube() {
@@ -95,7 +97,7 @@ public class MeshView extends Screen {
 		gl.glDepthFunc(GL2.GL_LESS);
 		gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
 		
-		gl.glEnable(GL2.GL_CULL_FACE);
+		gl.glDisable(GL2.GL_CULL_FACE);
 		gl.glCullFace(GL2.GL_BACK);
 		gl.glFrontFace(GL2.GL_CCW);
 		gl.glShadeModel(GL2.GL_SMOOTH);
@@ -147,9 +149,15 @@ public class MeshView extends Screen {
 			
 			Shader testShader = new Shader(gl, Helper.getBytesFromInputStream(Helper.getResourceFromJAR("/test.vs")),
 					Helper.getBytesFromInputStream(Helper.getResourceFromJAR("/test.fs")));
-			if (!testShader.isError()) {
+			curShader = testShader;
+			/*if (!testShader.isError()) {
 				parent.getLogger().log("Shader loaded!!");
-			}
+				curShader = testShader;
+				
+				//let's see what our shader got
+				parent.getLogger().log(curShader.toString());
+			}*/
+			parent.getLogger().log(testShader.toString());
 		}
 		
 		if (meshReloading) {
@@ -238,16 +246,13 @@ public class MeshView extends Screen {
 		
 		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
 		
-//		Matrix4 proj = new Matrix4();
-//		Matrix4.perspective(60.0f, 1.0f, 0.1f, 1000.0f, proj);
-		//set projection for camera
-		gl.glMatrixMode(GL2.GL_PROJECTION);
-//		gl.glLoadMatrixf(proj.m, 0);
-		gl.glLoadMatrixf(camera.getProjView().m, 0);
-		gl.glMatrixMode(GL2.GL_MODELVIEW);
-		
 		Quaternion rot = tracker.getRotation();
 		Matrix4 mat = new Matrix4(rot, new Vector3());
+		
+		/*//set projection for camera
+		gl.glMatrixMode(GL2.GL_PROJECTION);
+		gl.glLoadMatrixf(camera.getProjView().m, 0);
+		gl.glMatrixMode(GL2.GL_MODELVIEW);
 		
 		gl.glLoadMatrixf(mat.m, 0);
 		
@@ -286,7 +291,30 @@ public class MeshView extends Screen {
 		
 		gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
 		gl.glDisableClientState(GL2.GL_NORMAL_ARRAY);
-		gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+		gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);*/
+		
+		//use shader instead
+		if (curShader != null && cubeMesh != null) {
+			curShader.useShader(gl);
+		
+			//send uniform
+			gl.glUniformMatrix4fv(curShader.getUniformLoc(Shader.MAT_PROJVIEW), 1, false, camera.getProjView().m, 0);
+			gl.glUniformMatrix4fv(curShader.getUniformLoc(Shader.MAT_MODEL), 1, false, mat.m, 0);
+			
+			gl.glEnableVertexAttribArray(Shader.ATTRIB_POS);
+			gl.glEnableVertexAttribArray(Shader.ATTRIB_COL);
+			
+			//draw here
+			gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, cubeMesh.getVBO());
+			gl.glVertexAttribPointer(Shader.ATTRIB_POS, 3, GL2.GL_FLOAT, false, 0, 8*2*4 + 8*3*4);
+			gl.glVertexAttribPointer(Shader.ATTRIB_COL, 3, GL2.GL_FLOAT, false, 0, 8*2*4);
+			
+			gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, cubeMesh.getIBO());
+			gl.glDrawElements(GL2.GL_TRIANGLES, 36, GL2.GL_UNSIGNED_SHORT, 0);
+			
+			gl.glDisableVertexAttribArray(Shader.ATTRIB_POS);
+			gl.glDisableVertexAttribArray(Shader.ATTRIB_COL);
+		}
 	}
 	
 	@Override
