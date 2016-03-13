@@ -3,7 +3,13 @@ package com.bowie.gameeditor;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.nio.charset.Charset;
+import java.security.CodeSource;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import com.jogamp.opengl.GL2;
 
@@ -48,8 +54,18 @@ public class MeshView extends Screen {
 	//default cube mesh
 	private Mesh cubeMesh = null;
 	
+	//teh shader
+	boolean shaderReloading = true;
+	
+	//shit camera
+	PerspectiveCamera camera = new PerspectiveCamera();
+	
 	public MeshView(Editor p) {
 		super(p);
+		
+		//set default props
+		camera.setPos(-2, 1, 5);
+		camera.setRot(Quaternion.makeAxisRot(new Vector3(0, 1, 0), (float) Math.toRadians(-30)));
 	}
 	
 	public void drawSimpleCube() {
@@ -68,8 +84,9 @@ public class MeshView extends Screen {
 	
 	@Override
 	public void onResize(GL2 gl, int x, int y, int w, int h) {
-		parent.getLogger().log("Mesh View resized!! " + x + ", " + y + ", " + w + " , " + h);
+//		parent.getLogger().log("Mesh View resized!! " + x + ", " + y + ", " + w + " , " + h);
 		tracker.setViewport(x, y, w, h);
+		camera.setViewport(gl, x, y, w, h);
 		
 		//reset gl status
 		gl.glEnable(GL2.GL_DEPTH_TEST);
@@ -85,7 +102,7 @@ public class MeshView extends Screen {
 		
 		gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_FILL);
 		
-		parent.getLogger().log("glError: " + gl.glGetError());
+//		parent.getLogger().log("glError: " + gl.glGetError());
 	}
 	
 	@Override
@@ -118,6 +135,23 @@ public class MeshView extends Screen {
 
 	@Override
 	public void onDraw(GL2 gl, float dt) {
+		if (shaderReloading) {
+			shaderReloading = false;
+			// now attempt to load shader
+			
+//			InputStream vs = Helper.getResourceFromJAR("/test.vs");
+//			parent.getLogger().log("vs loaded? "+(vs!=null));
+//			byte [] vsData = Helper.getBytesFromInputStream(vs);
+//			String vsSource = new String(vsData);
+//			parent.getLogger().log(vsSource);
+			
+			Shader testShader = new Shader(gl, Helper.getBytesFromInputStream(Helper.getResourceFromJAR("/test.vs")),
+					Helper.getBytesFromInputStream(Helper.getResourceFromJAR("/test.fs")));
+			if (!testShader.isError()) {
+				parent.getLogger().log("Shader loaded!!");
+			}
+		}
+		
 		if (meshReloading) {
 			meshReloading = false;
 //			parent.getLogger().log("Here we should be loading shit: " + meshFilename);
@@ -194,7 +228,7 @@ public class MeshView extends Screen {
 			};
 			
 			cubeMesh = Mesh.buildSimpleCube(parent.getContext(), vertices, indices);
-			parent.getLogger().log(cubeMesh.toString());
+//			parent.getLogger().log(cubeMesh.toString());
 		}
 		
 		if (cullModeChanged) {
@@ -204,12 +238,18 @@ public class MeshView extends Screen {
 		
 		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
 		
-		gl.glLoadIdentity();
+//		Matrix4 proj = new Matrix4();
+//		Matrix4.perspective(60.0f, 1.0f, 0.1f, 1000.0f, proj);
+		//set projection for camera
+		gl.glMatrixMode(GL2.GL_PROJECTION);
+//		gl.glLoadMatrixf(proj.m, 0);
+		gl.glLoadMatrixf(camera.getProjView().m, 0);
+		gl.glMatrixMode(GL2.GL_MODELVIEW);
 		
 		Quaternion rot = tracker.getRotation();
-		Matrix4 mat = new Matrix4(rot, new Vector3(0, 0, -cam_dist));
+		Matrix4 mat = new Matrix4(rot, new Vector3());
 		
-		gl.glMultMatrixf(mat.m, 0);
+		gl.glLoadMatrixf(mat.m, 0);
 		
 		gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
 		gl.glEnableClientState(GL2.GL_NORMAL_ARRAY);
@@ -252,8 +292,6 @@ public class MeshView extends Screen {
 	@Override
 	public void onActive() {
 		//it's safe to create shit here since gl context is valid
-		
-			
 	}
 	
 	@Override

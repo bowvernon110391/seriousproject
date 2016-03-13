@@ -10,6 +10,7 @@ public class Matrix4 {
 	
 	private static Matrix3 tmpMat0 = new Matrix3();
 	private static Vector3 tmpV0 = new Vector3();
+	private static float [] tmp = new float[16];
 	
 	public Matrix4() {
 		this.setToIdentity();
@@ -56,9 +57,9 @@ public class Matrix4 {
         tmpV0.z = m[2]*m[12] + m[6]*m[13] + m[10]*m[14];
         
         //set it
-        m[12] = tmpV0.x;
-        m[13] = tmpV0.x;
-        m[14] = tmpV0.x;
+        m[12] = -tmpV0.x;
+        m[13] = -tmpV0.y;
+        m[14] = -tmpV0.z;
 	}
 	
 	public float[] getValues() {
@@ -66,8 +67,32 @@ public class Matrix4 {
 	}
 	
 	//simple mult
-	public static void mult(Matrix4 a, Matrix4 b, Matrix4 c) {
+	public static void mul(Matrix4 a, Matrix4 b, Matrix4 c) {
+		tmp[0] = a.m[0] * b.m[0] + a.m[4] * b.m[1] + a.m[8] * b.m[2] + a.m[12] * b.m[3];
+		tmp[4] = a.m[0] * b.m[4] + a.m[4] * b.m[5] + a.m[8] * b.m[6] + a.m[12] * b.m[7];
+		tmp[8] = a.m[0] * b.m[8] + a.m[4] * b.m[9] + a.m[8] * b.m[10] + a.m[12] * b.m[11];
+		tmp[12] = a.m[0] * b.m[12] + a.m[4] * b.m[13] + a.m[8] * b.m[14] + a.m[12] * b.m[15];
 		
+		tmp[1] = a.m[1] * b.m[0] + a.m[5] * b.m[1] + a.m[9] * b.m[2] + a.m[13] * b.m[3];
+		tmp[5] = a.m[1] * b.m[4] + a.m[5] * b.m[5] + a.m[9] * b.m[6] + a.m[13] * b.m[7];
+		tmp[9] = a.m[1] * b.m[8] + a.m[5] * b.m[9] + a.m[9] * b.m[10] + a.m[13] * b.m[11];
+		tmp[13] = a.m[1] * b.m[12] + a.m[5] * b.m[13] + a.m[9] * b.m[14] + a.m[13] * b.m[15];
+		
+		tmp[2] = a.m[2] * b.m[0] + a.m[6] * b.m[1] + a.m[10] * b.m[2] + a.m[14] * b.m[3];
+		tmp[6] = a.m[2] * b.m[4] + a.m[6] * b.m[5] + a.m[10] * b.m[6] + a.m[14] * b.m[7];
+		tmp[10] = a.m[2] * b.m[8] + a.m[6] * b.m[9] + a.m[10] * b.m[10] + a.m[14] * b.m[11];
+		tmp[14] = a.m[2] * b.m[12] + a.m[6] * b.m[13] + a.m[10] * b.m[14] + a.m[14] * b.m[15];
+		
+		tmp[3] = a.m[3] * b.m[0] + a.m[7] * b.m[1] + a.m[11] * b.m[2] + a.m[15] * b.m[3];
+		tmp[7] = a.m[3] * b.m[4] + a.m[7] * b.m[5] + a.m[11] * b.m[6] + a.m[15] * b.m[7];
+		tmp[11] = a.m[3] * b.m[8] + a.m[7] * b.m[9] + a.m[11] * b.m[10] + a.m[15] * b.m[11];
+		tmp[15] = a.m[3] * b.m[12] + a.m[7] * b.m[13] + a.m[11] * b.m[14] + a.m[15] * b.m[15];
+		
+		//to c
+		c.m[0] = tmp[0];	c.m[4] = tmp[4];	c.m[8] = tmp[8];	c.m[12] = tmp[12];
+		c.m[1] = tmp[1];	c.m[5] = tmp[5];	c.m[9] = tmp[9];	c.m[13] = tmp[13];
+		c.m[2] = tmp[2];	c.m[6] = tmp[6];	c.m[10] = tmp[10];	c.m[14] = tmp[14];
+		c.m[3] = tmp[3];	c.m[7] = tmp[7];	c.m[11] = tmp[11];	c.m[15] = tmp[15];
 	}
 	
 	//simple ortho matrix calculation
@@ -166,5 +191,81 @@ public class Matrix4 {
 		t.m[13] = y;
 		t.m[14] = z;
 		return t;
+	}
+	
+	public void fastInvert() {
+		float det = 0;
+		tmp[0] = m[5] * m[10] * m[15] - m[5] * m[11] * m[14] - m[9] * m[6]
+				* m[15] + m[9] * m[7] * m[14] + m[13] * m[6] * m[11] - m[13]
+				* m[7] * m[10];
+
+		tmp[4] = -m[4] * m[10] * m[15] + m[4] * m[11] * m[14] + m[8] * m[6]
+				* m[15] - m[8] * m[7] * m[14] - m[12] * m[6] * m[11] + m[12]
+				* m[7] * m[10];
+
+		tmp[8] = m[4] * m[9] * m[15] - m[4] * m[11] * m[13] - m[8] * m[5]
+				* m[15] + m[8] * m[7] * m[13] + m[12] * m[5] * m[11] - m[12]
+				* m[7] * m[9];
+
+		tmp[12] = -m[4] * m[9] * m[14] + m[4] * m[10] * m[13] + m[8] * m[5]
+				* m[14] - m[8] * m[6] * m[13] - m[12] * m[5] * m[10] + m[12]
+				* m[6] * m[9];
+
+		tmp[1] = -m[1] * m[10] * m[15] + m[1] * m[11] * m[14] + m[9] * m[2]
+				* m[15] - m[9] * m[3] * m[14] - m[13] * m[2] * m[11] + m[13]
+				* m[3] * m[10];
+
+		tmp[5] = m[0] * m[10] * m[15] - m[0] * m[11] * m[14] - m[8] * m[2]
+				* m[15] + m[8] * m[3] * m[14] + m[12] * m[2] * m[11] - m[12]
+				* m[3] * m[10];
+
+		tmp[9] = -m[0] * m[9] * m[15] + m[0] * m[11] * m[13] + m[8] * m[1]
+				* m[15] - m[8] * m[3] * m[13] - m[12] * m[1] * m[11] + m[12]
+				* m[3] * m[9];
+
+		tmp[13] = m[0] * m[9] * m[14] - m[0] * m[10] * m[13] - m[8] * m[1]
+				* m[14] + m[8] * m[2] * m[13] + m[12] * m[1] * m[10] - m[12]
+				* m[2] * m[9];
+
+		tmp[2] = m[1] * m[6] * m[15] - m[1] * m[7] * m[14] - m[5] * m[2]
+				* m[15] + m[5] * m[3] * m[14] + m[13] * m[2] * m[7] - m[13]
+				* m[3] * m[6];
+
+		tmp[6] = -m[0] * m[6] * m[15] + m[0] * m[7] * m[14] + m[4] * m[2]
+				* m[15] - m[4] * m[3] * m[14] - m[12] * m[2] * m[7] + m[12]
+				* m[3] * m[6];
+
+		tmp[10] = m[0] * m[5] * m[15] - m[0] * m[7] * m[13] - m[4] * m[1]
+				* m[15] + m[4] * m[3] * m[13] + m[12] * m[1] * m[7] - m[12]
+				* m[3] * m[5];
+
+		tmp[14] = -m[0] * m[5] * m[14] + m[0] * m[6] * m[13] + m[4] * m[1]
+				* m[14] - m[4] * m[2] * m[13] - m[12] * m[1] * m[6] + m[12]
+				* m[2] * m[5];
+
+		tmp[3] = -m[1] * m[6] * m[11] + m[1] * m[7] * m[10] + m[5] * m[2]
+				* m[11] - m[5] * m[3] * m[10] - m[9] * m[2] * m[7] + m[9]
+				* m[3] * m[6];
+
+		tmp[7] = m[0] * m[6] * m[11] - m[0] * m[7] * m[10] - m[4] * m[2]
+				* m[11] + m[4] * m[3] * m[10] + m[8] * m[2] * m[7] - m[8]
+				* m[3] * m[6];
+
+		tmp[11] = -m[0] * m[5] * m[11] + m[0] * m[7] * m[9] + m[4] * m[1]
+				* m[11] - m[4] * m[3] * m[9] - m[8] * m[1] * m[7] + m[8] * m[3]
+				* m[5];
+
+		tmp[15] = m[0] * m[5] * m[10] - m[0] * m[6] * m[9] - m[4] * m[1]
+				* m[10] + m[4] * m[2] * m[9] + m[8] * m[1] * m[6] - m[8] * m[2]
+				* m[5];
+
+		det = m[0] * tmp[0] + m[1] * tmp[4] + m[2] * tmp[8] + m[3] * tmp[12];
+		if (Math.abs(det) < Vector3.EPSILON)
+			return;
+		
+		det = 1.0f/det;
+		
+		for (int i=0; i<16; i++)
+			m[i] = tmp[i] * det;
 	}
 }

@@ -1,8 +1,12 @@
 package com.bowie.gameeditor;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class Helper {
@@ -52,5 +56,28 @@ public class Helper {
 	
 	public static byte [] getBytesFromFile(String fname) {
 		return getBytesFromFile(new File(fname));
+	}
+	
+	public static byte [] getBytesFromInputStream(InputStream is) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		byte [] tmpBuf = new byte[4096];	//temp read buffer
+		
+		int nread= -1;
+		try {
+			while ( (nread = is.read(tmpBuf)) != -1 ) {
+				baos.write(tmpBuf, 0, nread);
+			}
+			is.close();
+			return baos.toByteArray();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	public static InputStream getResourceFromJAR(String filename) {
+		return Helper.class.getResourceAsStream(filename);
 	}
 }

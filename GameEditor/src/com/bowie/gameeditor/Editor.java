@@ -34,19 +34,6 @@ public class Editor implements ScriptCmdListener {
 	private int tickPerSec = 10;	//10 FPS update rate
 	private int renderPerSec = 50;	//60 FPS render rate
 	
-	//--camera & viewport
-	//some enumeration
-	public static int CAM_ORTHOGONAL = 0;
-	public static int CAM_PERSPECTIVE = 1;
-		
-	private int camMode = CAM_PERSPECTIVE;	//0 
-	private float camFOV = 55.0f;	//55 degree FOV
-	private float camNear = 1.0f;
-	private float camFar = 50.0f;
-	private float camAspect = 1.0f;
-	private int [] viewport = {0, 0, 640, 480};
-	private boolean viewDirty = false;
-	
 	//editor stat
 	private boolean isPlaying = true;
 	
@@ -99,9 +86,6 @@ public class Editor implements ScriptCmdListener {
 		glcap.setGreenBits(8);
 		glcap.setBlueBits(8);
 		glcap.setAlphaBits(8);
-		
-		logger.log("Depth bits: " + glcap.getDepthBits() + " double buffered: " + glcap.getDoubleBuffered() + " hardware accel: " + glcap.getHardwareAccelerated());
-		logger.log("Color bits(rgba): " + glcap.getRedBits() + " " + glcap.getGreenBits() + " " + glcap.getBlueBits() + " " + glcap.getAlphaBits());
 		
 //		canvas = new GLJPanel(glcap);
 		canvas = new GLCanvas();
@@ -208,12 +192,6 @@ public class Editor implements ScriptCmdListener {
 			timeElapsed = 0.0f;
 		}
 		
-		//update view if dirty
-		if (viewDirty) {
-			viewDirty = false;
-			setupCamera(gl);	//this function can be affected by each screen, no worry
-		}
-		
 		//draw
 		if (activeScreen >= 0)
 			views[activeScreen].onDraw(gl, timeElapsed);
@@ -222,14 +200,6 @@ public class Editor implements ScriptCmdListener {
 	//this resize te canvas
 	public void canvasResize(GL2 gl, int x, int y, int w, int h) {
 //		log("Resized: " + x + "," + y + "," + w + "," + h);
-		
-		//recalc aspect
-		viewDirty = true;
-		viewport[0] = x;
-		viewport[1] = y;
-		viewport[2] = w;
-		viewport[3] = h;
-		camAspect = (float)w/(float)h;
 		
 		// see that shit
 		if (activeScreen >= 0)
@@ -275,26 +245,26 @@ public class Editor implements ScriptCmdListener {
 		m.setMesh(filename);
 	}
 	
-	public void setupCamera(GL2 gl) {
-		gl.glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-		
-		Matrix4 m = new Matrix4();
-		Matrix4.perspective(camFOV, camAspect, camNear, camFar, m);
-		
-		gl.glMatrixMode(GL2.GL_PROJECTION);
-		//gl.glLoadMatrixf(m.getValues(), 0);
-		gl.glLoadMatrixf(m.getValues(), 0);
-		gl.glMatrixMode(GL2.GL_MODELVIEW);
-		gl.glLoadIdentity();
-		
-		//let's see the contents of modelview matrix
-		/*gl.glGetFloatv(GL2.GL_PROJECTION_MATRIX, m.m, 0);
-		
-		log("mv: "+m.m[0]+" "+m.m[4]+" "+m.m[8]+" "+m.m[12]);
-		log("mv: "+m.m[1]+" "+m.m[5]+" "+m.m[9]+" "+m.m[13]);
-		log("mv: "+m.m[2]+" "+m.m[6]+" "+m.m[10]+" "+m.m[14]);
-		log("mv: "+m.m[3]+" "+m.m[7]+" "+m.m[11]+" "+m.m[15]);*/
-	}
+//	public void setupCamera(GL2 gl) {
+//		gl.glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+//		
+//		Matrix4 m = new Matrix4();
+//		Matrix4.perspective(camFOV, camAspect, camNear, camFar, m);
+//		
+//		gl.glMatrixMode(GL2.GL_PROJECTION);
+//		//gl.glLoadMatrixf(m.getValues(), 0);
+//		gl.glLoadMatrixf(m.getValues(), 0);
+//		gl.glMatrixMode(GL2.GL_MODELVIEW);
+//		gl.glLoadIdentity();
+//		
+//		//let's see the contents of modelview matrix
+//		/*gl.glGetFloatv(GL2.GL_PROJECTION_MATRIX, m.m, 0);
+//		
+//		log("mv: "+m.m[0]+" "+m.m[4]+" "+m.m[8]+" "+m.m[12]);
+//		log("mv: "+m.m[1]+" "+m.m[5]+" "+m.m[9]+" "+m.m[13]);
+//		log("mv: "+m.m[2]+" "+m.m[6]+" "+m.m[10]+" "+m.m[14]);
+//		log("mv: "+m.m[3]+" "+m.m[7]+" "+m.m[11]+" "+m.m[15]);*/
+//	}
 	
 	public void setDataFile(String filename) {
 		gdf = new GameDataFiles(filename);
