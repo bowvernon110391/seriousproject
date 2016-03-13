@@ -1,11 +1,14 @@
 Editor spawned!
+Depth bits: 32 double buffered: true hardware accel: true
+Color bits(rgba): 8 8 8 8
 editor attached to canvas panel
 Mesh View resized!! 0, 0, 540 , 442
-vbo: 3 , ibo: 4 meshCount: 1
+glError: 0
+vbo: 2 , ibo: 3 meshCount: 1
   0: indexCount: 0 , offset(bytes): 0
 
 Here we should be loading shit: C:\Users\Bow\Documents\a.bmf
-vbo: 6 , ibo: 7 meshCount: 1
+vbo: 5 , ibo: 6 meshCount: 1
   0: indexCount: 36 , offset(bytes): 0
 
 reloading texture: D:\blender_project\tex_eye.png

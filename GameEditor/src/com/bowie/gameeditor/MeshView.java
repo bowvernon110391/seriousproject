@@ -1,5 +1,6 @@
 package com.bowie.gameeditor;
 
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 
@@ -39,6 +40,9 @@ public class MeshView extends Screen {
 	private Texture2D curTex = null;
 	private boolean texReloading = false;
 	private String texFilename = "";
+
+	int curFaceCull = GL2.GL_BACK;
+	boolean cullModeChanged = false;
 	
 	//default cube mesh
 	private Mesh cubeMesh = null;
@@ -68,11 +72,30 @@ public class MeshView extends Screen {
 		
 		//reset gl status
 		gl.glEnable(GL2.GL_DEPTH_TEST);
+		gl.glClearDepth(1.0);
+		gl.glClearColor(0.2f, 0.5f, 0.1f, 0.0f);
+		gl.glDepthFunc(GL2.GL_LESS);
 		gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
 		
-		gl.glFrontFace(GL2.GL_CCW);
 		gl.glEnable(GL2.GL_CULL_FACE);
 		gl.glCullFace(GL2.GL_BACK);
+		gl.glFrontFace(GL2.GL_CCW);
+		gl.glShadeModel(GL2.GL_SMOOTH);
+		
+		gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_FILL);
+		
+		parent.getLogger().log("glError: " + gl.glGetError());
+	}
+	
+	@Override
+	public void keyPressed(KeyEvent arg0) {
+		// TODO Auto-generated method stub
+		super.keyPressed(arg0);
+//		parent.getLogger().log("Key pressed: " + arg0.getKeyCode());
+		if (arg0.getKeyCode() == 'F') {
+			curFaceCull = curFaceCull == GL2.GL_BACK ? GL2.GL_FRONT : GL2.GL_BACK;
+			cullModeChanged = true;
+		}
 	}
 
 	@Override
@@ -150,6 +173,11 @@ public class MeshView extends Screen {
 			
 			cubeMesh = Mesh.buildSimpleCube(parent.getContext(), vertices, indices);
 			parent.getLogger().log(cubeMesh.toString());
+		}
+		
+		if (cullModeChanged) {
+			cullModeChanged = false;
+			gl.glCullFace(curFaceCull);
 		}
 		
 		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);

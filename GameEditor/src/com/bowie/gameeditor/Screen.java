@@ -44,7 +44,6 @@ public class Screen implements MouseListener, MouseMotionListener, MouseWheelLis
 	@Override
 	public void keyPressed(KeyEvent arg0) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override

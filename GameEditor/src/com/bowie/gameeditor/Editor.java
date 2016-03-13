@@ -14,12 +14,14 @@ import com.jogamp.opengl.GLContext;
 import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.GLException;
 import com.jogamp.opengl.GLProfile;
+import com.jogamp.opengl.awt.GLCanvas;
 import com.jogamp.opengl.awt.GLJPanel;
 import com.jogamp.opengl.util.FPSAnimator;
 
 public class Editor implements ScriptCmdListener {	
 	//local private variable
-	private GLJPanel canvas;
+//	private GLJPanel canvas;
+	private GLCanvas canvas;
 	private FPSAnimator ticker;
 	private GL2 context = null;
 	private GLContext rawContext = null;
@@ -91,14 +93,18 @@ public class Editor implements ScriptCmdListener {
 		GLCapabilities glcap = new GLCapabilities(glp);
 		
 		glcap.setHardwareAccelerated(true);
-		glcap.setDepthBits(24);
+		glcap.setDepthBits(32);
 		glcap.setDoubleBuffered(true);
 		glcap.setRedBits(8);
 		glcap.setGreenBits(8);
 		glcap.setBlueBits(8);
 		glcap.setAlphaBits(8);
 		
-		canvas = new GLJPanel(glcap);
+		logger.log("Depth bits: " + glcap.getDepthBits() + " double buffered: " + glcap.getDoubleBuffered() + " hardware accel: " + glcap.getHardwareAccelerated());
+		logger.log("Color bits(rgba): " + glcap.getRedBits() + " " + glcap.getGreenBits() + " " + glcap.getBlueBits() + " " + glcap.getAlphaBits());
+		
+//		canvas = new GLJPanel(glcap);
+		canvas = new GLCanvas();
 		
 		canvas.addGLEventListener(new GLEventListener() {
 			
@@ -138,9 +144,7 @@ public class Editor implements ScriptCmdListener {
 	public void canvasInit(GL2 gl) {	
 		if (context == null) {
 			context = gl;
-		}
-		
-		gl.glClearColor(0.5f, 0.2f, 0.5f, 0.0f);		
+		}		
 		//start animating
 		ticker.start();
 //		logger.log("editor initialized");
@@ -240,7 +244,7 @@ public class Editor implements ScriptCmdListener {
 	}
 	
 	//return canvas object
-	public GLJPanel getCanvas() {
+	public GLCanvas getCanvas() {
 		return canvas;
 	}
 	
