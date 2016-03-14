@@ -215,43 +215,21 @@ public class MainWindow {
 		JPanel paneMeshBtnGrp = new JPanel();
 		paneMeshBtnGrp.setBounds(12, 143, 141, 88);
 		paneMesh.add(paneMeshBtnGrp);
-		paneMeshBtnGrp.setLayout(new GridLayout(0, 1, 0, 5));
+		paneMeshBtnGrp.setLayout(new GridLayout(3, 1, 0, 5));
 
-		JButton btnLoadMesh = new JButton("Load Mesh");
-		btnLoadMesh.addActionListener(new ActionListener() {
+		JButton btnLoadSkeleton = new JButton("Load Skeleton");
+		btnLoadSkeleton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				// gotta pick file, load it, and log it and go to hell
 				JFileChooser jfc = new JFileChooser();
-				int ret = jfc.showOpenDialog(frmGameEditor);
 
-				if (ret == JFileChooser.APPROVE_OPTION) {
-					String filename = jfc.getSelectedFile().getAbsolutePath();
-					// logger.log(m.toString());
-					edt.testMesh(filename);
+				int nCode = jfc.showOpenDialog(frmGameEditor);
+				if (nCode == JFileChooser.APPROVE_OPTION) {
+					// got it
+					edt.testSkeleton(jfc.getSelectedFile().getAbsolutePath());
 				}
 			}
 		});
-		paneMeshBtnGrp.add(btnLoadMesh);
-
-		JButton btnLoadTexture = new JButton("Load Texture");
-		paneMeshBtnGrp.add(btnLoadTexture);
-
-		JButton btnViewMesh = new JButton("View Mesh");
-		paneMeshBtnGrp.add(btnViewMesh);
-		btnLoadTexture.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				// load texture here
-				// gotta pick file, load it, and log it and go to hell
-				JFileChooser jfc = new JFileChooser();
-				int ret = jfc.showOpenDialog(frmGameEditor);
-
-				if (ret == JFileChooser.APPROVE_OPTION) {
-					String filename = jfc.getSelectedFile().getAbsolutePath();
-					// logger.log(m.toString());
-					edt.testTexture(filename);
-				}
-			}
-		});
+		paneMeshBtnGrp.add(btnLoadSkeleton);
 
 		JPanel paneObject = new JPanel();
 		paneToolTab.addTab("Object", null, paneObject, null);

@@ -1,8 +1,13 @@
 package com.bowie.gameeditor;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 
 import javax.swing.JPanel;
@@ -138,6 +143,7 @@ public class Editor implements ScriptCmdListener {
 //		logger.log("editor initialized");
 		//set default screen to mesh
 		selectView(SCREEN_MESH_VIEW);
+		testSkeleton("D:\\bone.txt");
 	}
 	
 	//this select screen
@@ -238,12 +244,12 @@ public class Editor implements ScriptCmdListener {
 		panel.add(canvas);
 	}
 	
-	public void testMesh(String filename) {
+	/*public void testMesh(String filename) {
 		selectView(SCREEN_MESH_VIEW);
 		
 		MeshView m = (MeshView) getCurrentView();
 		m.setMesh(filename);
-	}
+	}*/
 	
 //	public void setupCamera(GL2 gl) {
 //		gl.glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
@@ -290,8 +296,67 @@ public class Editor implements ScriptCmdListener {
 		//2nd, execute
 	}
 
-	public void testTexture(String filename) {
+	/*public void testTexture(String filename) {
 		MeshView m = (MeshView) getCurrentView();
 		m.setTexture(filename);
+	}*/
+	
+	public void testSkeleton(String filename) {
+		try {
+			//open it
+			BufferedReader br = new BufferedReader(new FileReader(filename));
+			//to hold a new line
+			String line;
+			//to hold skeleton data
+			Skeleton skel = new Skeleton();
+			while ((line = br.readLine()) != null ) {
+				line = line.trim();
+				/*if (line.length() > 3) {
+					//good to go
+					String [] data = line.split("|");
+					logger.log("we got " + data.length + " tokens");
+					logger.log("the first: " + data[0] + " the last: " + data[data.length-1]);
+				} else {
+					logger.log("skipped short string: " + line);
+				}*/
+				if (line.length() > 3) {
+//					logger.log("SKELETON: " + line);
+					String [] data = line.split(Pattern.quote("|"));
+//					logger.log("datalen: " + data.length);
+					
+					if (data.length >= 6) {
+						String boneName = data[0];
+						String parentName = data[1];
+						int parentId = Integer.parseInt(data[2]);
+						
+						String [] headPos = data[3].split("\\s");
+						String [] tailPos = data[4].split("\\s");
+						String [] boneRot = data[5].split("\\s");
+						
+						Vector3 head = new Vector3(Float.parseFloat(headPos[0]), Float.parseFloat(headPos[1]), Float.parseFloat(headPos[2]));
+						Vector3 tail = new Vector3(Float.parseFloat(tailPos[0]), Float.parseFloat(tailPos[1]), Float.parseFloat(tailPos[2]));
+						Quaternion brot = new Quaternion(Float.parseFloat(boneRot[1]), Float.parseFloat(boneRot[2]), Float.parseFloat(boneRot[3]), Float.parseFloat(boneRot[0]));
+						
+						skel.addBone(boneName, parentName, head, tail, brot);
+					}
+				}
+			}			
+			br.close();
+			
+			//send to meshview
+			MeshView m = (MeshView) getCurrentView();
+			skel.buildTransform();
+			
+			//now log fully
+			logger.log(skel.toString());
+			
+			m.skel = skel;
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

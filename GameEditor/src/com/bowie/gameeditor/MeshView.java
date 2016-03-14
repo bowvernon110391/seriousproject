@@ -56,6 +56,9 @@ public class MeshView extends Screen {
 	//default cube mesh
 	private Mesh cubeMesh = null;
 	
+	//skeleton
+	public Skeleton skel = null;
+	
 	//teh shader
 	boolean shaderReloading = true;
 	Shader curShader = null;
@@ -102,7 +105,9 @@ public class MeshView extends Screen {
 		gl.glFrontFace(GL2.GL_CCW);
 		gl.glShadeModel(GL2.GL_SMOOTH);
 		
-		gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_FILL);
+		gl.glLineWidth(3.0f);
+		
+//		gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_LINE);
 		
 //		parent.getLogger().log("glError: " + gl.glGetError());
 	}
@@ -134,6 +139,101 @@ public class MeshView extends Screen {
 			meshFilename = "mesh/male_char_proto.bmf";
 		}
 	}
+	
+	private void drawTestShader(GL2 gl, float dt) {
+		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
+
+		Quaternion rot = tracker.getRotation();
+		Matrix4 mat = new Matrix4(rot, new Vector3());
+
+		// use shader instead
+		if (curShader != null && cubeMesh != null) {
+			curShader.useShader(gl);
+
+			// send uniform
+			gl.glUniformMatrix4fv(curShader.getUniformLoc(Shader.MAT_PROJVIEW),
+					1, false, camera.getProjView().m, 0);
+			gl.glUniformMatrix4fv(curShader.getUniformLoc(Shader.MAT_MODEL), 1,
+					false, mat.m, 0);
+
+			gl.glEnableVertexAttribArray(Shader.ATTRIB_POS);
+			gl.glEnableVertexAttribArray(Shader.ATTRIB_COL);
+
+			// draw here
+			gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, cubeMesh.getVBO());
+			gl.glVertexAttribPointer(Shader.ATTRIB_POS, 3, GL2.GL_FLOAT, false,
+					0, 8 * 2 * 4 + 8 * 3 * 4);
+			gl.glVertexAttribPointer(Shader.ATTRIB_COL, 3, GL2.GL_FLOAT, false,
+					0, 8 * 2 * 4);
+
+			gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, cubeMesh.getIBO());
+			gl.glDrawElements(GL2.GL_TRIANGLES, 36, GL2.GL_UNSIGNED_SHORT, 0);
+
+			gl.glDisableVertexAttribArray(Shader.ATTRIB_POS);
+			gl.glDisableVertexAttribArray(Shader.ATTRIB_COL);
+		}
+	}
+	
+	void drawTestCube(GL2 gl, float dt) {
+		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
+
+		Quaternion rot = tracker.getRotation();
+		Matrix4 mat = new Matrix4(rot, new Vector3());
+		
+		gl.glMatrixMode(GL2.GL_PROJECTION);
+		gl.glLoadMatrixf(camera.getProjView().m, 0);
+		gl.glMatrixMode(GL2.GL_MODELVIEW);
+
+		gl.glLoadMatrixf(mat.m, 0);
+
+		gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+		gl.glEnableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+		gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
+
+		if (cubeMesh != null) {
+			gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, cubeMesh.getVBO());
+
+			gl.glTexCoordPointer(2, GL2.GL_FLOAT, 0, 0);
+			gl.glColorPointer(3, GL2.GL_FLOAT, 0, 8 * 2 * 4);
+			gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 8 * 2 * 4 + 8 * 3 * 4);
+
+			gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, cubeMesh.getIBO());
+			gl.glDrawElements(GL2.GL_TRIANGLES, 36, GL2.GL_UNSIGNED_SHORT, 0);
+		}
+
+		gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
+		gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
+		gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+		 
+	}
+	
+	void drawTestSkeleton(GL2 gl, float dt) {
+		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
+
+		Quaternion rot = tracker.getRotation();
+		Matrix4 mat = new Matrix4(rot, new Vector3());
+		
+		gl.glMatrixMode(GL2.GL_PROJECTION);
+		gl.glLoadMatrixf(camera.getProjView().m, 0);
+		gl.glMatrixMode(GL2.GL_MODELVIEW);
+
+		gl.glLoadMatrixf(mat.m, 0);
+		
+		if (skel == null)
+			return;
+		
+		gl.glBegin(GL2.GL_LINES);
+			for (int i=0; i<skel.bones.size(); i++) {
+				Skeleton.Bone b = skel.bones.get(i);
+				
+				gl.glColor3f(1, 0, 0);
+				gl.glVertex3f(b.absHead.x, b.absHead.y, b.absHead.z);
+				
+				gl.glColor3f(0, 0, 1);
+				gl.glVertex3f(b.absTail.x, b.absTail.y, b.absTail.z);
+			}
+		gl.glEnd();
+	}
 
 	@Override
 	public void onDraw(GL2 gl, float dt) {
@@ -157,7 +257,7 @@ public class MeshView extends Screen {
 				//let's see what our shader got
 				parent.getLogger().log(curShader.toString());
 			}*/
-			parent.getLogger().log(testShader.toString());
+//			parent.getLogger().log(testShader.toString());
 		}
 		
 		if (meshReloading) {
@@ -244,77 +344,9 @@ public class MeshView extends Screen {
 			gl.glCullFace(curFaceCull);
 		}
 		
-		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
+//		drawTestCube(gl, dt);
+		drawTestSkeleton(gl, dt);
 		
-		Quaternion rot = tracker.getRotation();
-		Matrix4 mat = new Matrix4(rot, new Vector3());
-		
-		/*//set projection for camera
-		gl.glMatrixMode(GL2.GL_PROJECTION);
-		gl.glLoadMatrixf(camera.getProjView().m, 0);
-		gl.glMatrixMode(GL2.GL_MODELVIEW);
-		
-		gl.glLoadMatrixf(mat.m, 0);
-		
-		gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
-		gl.glEnableClientState(GL2.GL_NORMAL_ARRAY);
-		gl.glEnableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
-		
-		//enable texturing if possible
-		if (curTex != null) {
-			gl.glEnable(GL2.GL_TEXTURE_2D);
-			curTex.getTexture().bind(gl);
-			gl.glEnable(GL2.GL_BLEND);;
-		}
-		
-		if (curMesh != null) {
-			gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
-			
-			curMesh.renderSimple(gl);
-		} else if (cubeMesh != null) {
-			gl.glDisableClientState(GL2.GL_NORMAL_ARRAY);
-			gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
-			
-			gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, cubeMesh.getVBO());
-			
-			gl.glTexCoordPointer(2, GL2.GL_FLOAT, 0, 0);
-			gl.glColorPointer(3, GL2.GL_FLOAT, 0, 8*2*4);
-			gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 8*2*4 + 8*3*4);
-			
-			
-			gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, cubeMesh.getIBO());
-			gl.glDrawElements(GL2.GL_TRIANGLES, 36, GL2.GL_UNSIGNED_SHORT, 0);
-		}
-		
-		gl.glDisable(GL2.GL_TEXTURE_2D);
-		gl.glDisable(GL2.GL_BLEND);
-		
-		gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
-		gl.glDisableClientState(GL2.GL_NORMAL_ARRAY);
-		gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);*/
-		
-		//use shader instead
-		if (curShader != null && cubeMesh != null) {
-			curShader.useShader(gl);
-		
-			//send uniform
-			gl.glUniformMatrix4fv(curShader.getUniformLoc(Shader.MAT_PROJVIEW), 1, false, camera.getProjView().m, 0);
-			gl.glUniformMatrix4fv(curShader.getUniformLoc(Shader.MAT_MODEL), 1, false, mat.m, 0);
-			
-			gl.glEnableVertexAttribArray(Shader.ATTRIB_POS);
-			gl.glEnableVertexAttribArray(Shader.ATTRIB_COL);
-			
-			//draw here
-			gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, cubeMesh.getVBO());
-			gl.glVertexAttribPointer(Shader.ATTRIB_POS, 3, GL2.GL_FLOAT, false, 0, 8*2*4 + 8*3*4);
-			gl.glVertexAttribPointer(Shader.ATTRIB_COL, 3, GL2.GL_FLOAT, false, 0, 8*2*4);
-			
-			gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, cubeMesh.getIBO());
-			gl.glDrawElements(GL2.GL_TRIANGLES, 36, GL2.GL_UNSIGNED_SHORT, 0);
-			
-			gl.glDisableVertexAttribArray(Shader.ATTRIB_POS);
-			gl.glDisableVertexAttribArray(Shader.ATTRIB_COL);
-		}
 	}
 	
 	@Override
@@ -399,8 +431,14 @@ public class MeshView extends Screen {
 		if (arg0.isShiftDown())
 			speed = cam_fast_step_mult;
 		
+		Vector3 camPos = camera.getPos();
+		cam_dist = camPos.z;
+		
 		cam_dist += arg0.getWheelRotation() * cam_step * speed;
 		//limit distance
 		cam_dist = cam_dist < cam_min_dist ? cam_min_dist : cam_dist;
+		
+		camPos.z = cam_dist;
+		camera.setPos(camPos.x, camPos.y, camPos.z);
 	}
 }
