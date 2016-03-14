@@ -58,6 +58,9 @@ public class MeshView extends Screen {
 	
 	//skeleton
 	public Skeleton skel = null;
+	boolean skelDrawMatrix = false;
+	boolean skelSelChange = false;	//selection has changed
+	int skelBoneId = -1;	//none selected
 	
 	//teh shader
 	boolean shaderReloading = true;
@@ -122,21 +125,19 @@ public class MeshView extends Screen {
 			cullModeChanged = true;
 		}
 		
-		if (arg0.getKeyCode() == 'R') {
-			//open up readme files
-			GameDataFiles gdf = parent.getDataFile();
-			if (gdf != null) {
-				byte [] tmpBuf = gdf.getBytes("readme.txt");
-				if (tmpBuf != null) {
-					parent.getLogger().log(new String(tmpBuf, Charset.forName("UTF-8")));
-				}
-			}
+		//bone data traversal
+		if (arg0.getKeyCode() == 'M') {
+			skelDrawMatrix = !skelDrawMatrix;
 		}
 		
-		if (arg0.getKeyCode() == 'M') {
-			//model test
-			meshReloading = true;
-			meshFilename = "mesh/male_char_proto.bmf";
+		if (arg0.getKeyCode() == KeyEvent.VK_LEFT) {
+			skelBoneId --;
+			skelSelChange = true;
+		}
+		
+		if (arg0.getKeyCode() == KeyEvent.VK_RIGHT) {
+			skelBoneId ++;
+			skelSelChange = true;
 		}
 	}
 	
@@ -231,6 +232,47 @@ public class MeshView extends Screen {
 				
 				gl.glColor3f(0, 0, 1);
 				gl.glVertex3f(b.absTail.x, b.absTail.y, b.absTail.z);
+			}
+			//now we draw bone matrix
+			float matScale = 1.05f;
+			
+			//Draw matrix
+			if (skelDrawMatrix && skel.bones.size() > 0) {
+				//correct the bone id first
+				skelBoneId = skelBoneId >= skel.bones.size() ? skel.bones.size()-1 : skelBoneId < 0 ? 0 : skelBoneId;
+				
+				//log
+				if (skelSelChange) {
+					skelSelChange = false;
+					parent.getLogger().log("bone selected: " + skel.bones.get(skelBoneId).name);
+				}
+				
+				//root point is absolute head
+				Vector3 matP = skel.bones.get(skelBoneId).absHead;
+				//rotation is absolute rotation
+				Quaternion matR = skel.bones.get(skelBoneId).absRot;
+				
+				Matrix3 boneMat = new Matrix3();
+				matR.toMatrix3(boneMat);
+				
+				float [] colors = {
+						1, 0.2f, 0.2f,
+						0.2f, 1, 0.2f,
+						0.2f, 0.2f, 1
+				};
+				
+				//draw em
+				Vector3 vTmp = new Vector3();
+				for (int i=0; i<3; i++) {
+					vTmp.x = matP.x + boneMat.m[i*3] * matScale;
+					vTmp.y = matP.y + boneMat.m[i*3+1] * matScale;
+					vTmp.z = matP.z + boneMat.m[i*3+2] * matScale;
+					
+					//issue draw call
+					gl.glColor3fv(colors, i*3);
+					gl.glVertex3f(matP.x, matP.y, matP.z);
+					gl.glVertex3f(vTmp.x, vTmp.y, vTmp.z);
+				}
 			}
 		gl.glEnd();
 	}
@@ -352,6 +394,12 @@ public class MeshView extends Screen {
 	@Override
 	public void onActive() {
 		//it's safe to create shit here since gl context is valid
+		SkeletonLoader loader = new SkeletonLoader();
+		
+		skel = loader.loadSkeleton("D:\\bone.txt");
+		//transform
+		if (skel != null)
+			skel.buildTransform();
 	}
 	
 	@Override

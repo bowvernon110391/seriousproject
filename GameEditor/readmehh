@@ -10,3 +10,4 @@ This is the design document (sorry):
 
 ==================TODO==============================================================
 -[BMF EXPORTER] : add option to save each mesh separated by material
+-[SKEL EXPORTER] : only needs {name, parentName, headLocal, tailLocal, rotLocal}

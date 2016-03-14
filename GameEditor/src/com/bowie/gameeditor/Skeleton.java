@@ -42,13 +42,28 @@ public class Skeleton {
 	}
 	
 	public void addBone(String name, String parentName, Vector3 head, Vector3 tail, Quaternion rot) {
+		Quaternion qRotX90 = Quaternion.makeAxisRot(new Vector3(1, 0, 0), (float) Math.toRadians(-90));
+		
 		Bone b = new Bone();
 		b.name = name;
 		b.parentName = parentName;
 		b.parentId = findBoneId(parentName);
-		b.head = head;
-		b.tail = tail;
-		b.localRot = rot;
+		
+		//only tranform if no parent
+		/*if (b.parentId < 0) {
+			Quaternion rotFix = Quaternion.makeAxisRot(new Vector3(1, 0, 0), (float) Math.toRadians(-90));
+			
+			rotFix.transformVector(head, b.head);
+			rotFix.transformVector(tail, b.tail);
+			
+			Quaternion.mul(rotFix, rot, b.localRot);
+		} else {*/
+			b.head = head;
+			b.tail = tail;
+			
+			b.localRot = rot;
+//		}
+				
 		b.localRot.normalize();	//just to be safe
 		//add em
 		bones.add(b);

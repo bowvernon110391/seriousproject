@@ -143,7 +143,6 @@ public class Editor implements ScriptCmdListener {
 //		logger.log("editor initialized");
 		//set default screen to mesh
 		selectView(SCREEN_MESH_VIEW);
-		testSkeleton("D:\\bone.txt");
 	}
 	
 	//this select screen
