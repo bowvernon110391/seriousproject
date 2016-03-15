@@ -48,6 +48,7 @@ public class SkeletonLoader {
 				System.out.println("bone: " + boneName + ", parent: " + parentName);
 			}
 		}
-		return skel;
+		skel.buildTransform();
+		return skel;	//return ready to use skeleton
 	}
 }

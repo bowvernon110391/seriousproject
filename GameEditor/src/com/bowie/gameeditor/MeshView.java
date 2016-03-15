@@ -41,20 +41,9 @@ public class MeshView extends Screen {
 	
 	private Trackball tracker = new Trackball();
 	
-	//current mesh to be viewed
-	private Mesh curMesh = null;
-	private boolean meshReloading = false;
-	private String meshFilename = "";
-	
-	private Texture2D curTex = null;
-	private boolean texReloading = false;
-	private String texFilename = "";
-
+	//current state
 	int curFaceCull = GL2.GL_BACK;
 	boolean cullModeChanged = false;
-	
-	//default cube mesh
-	private Mesh cubeMesh = null;
 	
 	//skeleton
 	public Skeleton skel = null;
@@ -74,20 +63,6 @@ public class MeshView extends Screen {
 		
 		//set default props
 		camera.setPos(0, 0, 5);
-	}
-	
-	public void drawSimpleCube() {
-		//different format, so need different approach
-	}
-	
-	public void setMesh(String filename) {
-		meshFilename = filename;
-		meshReloading = true;
-	}
-	
-	public void setTexture(String filename) {
-		texFilename = filename;
-		texReloading = true;
 	}
 	
 	@Override
@@ -148,31 +123,10 @@ public class MeshView extends Screen {
 		Matrix4 mat = new Matrix4(rot, new Vector3());
 
 		// use shader instead
-		if (curShader != null && cubeMesh != null) {
-			curShader.useShader(gl);
-
-			// send uniform
-			gl.glUniformMatrix4fv(curShader.getUniformLoc(Shader.MAT_PROJVIEW),
-					1, false, camera.getProjView().m, 0);
-			gl.glUniformMatrix4fv(curShader.getUniformLoc(Shader.MAT_MODEL), 1,
-					false, mat.m, 0);
-
-			gl.glEnableVertexAttribArray(Shader.ATTRIB_POS);
-			gl.glEnableVertexAttribArray(Shader.ATTRIB_COL);
-
-			// draw here
-			gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, cubeMesh.getVBO());
-			gl.glVertexAttribPointer(Shader.ATTRIB_POS, 3, GL2.GL_FLOAT, false,
-					0, 8 * 2 * 4 + 8 * 3 * 4);
-			gl.glVertexAttribPointer(Shader.ATTRIB_COL, 3, GL2.GL_FLOAT, false,
-					0, 8 * 2 * 4);
-
-			gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, cubeMesh.getIBO());
-			gl.glDrawElements(GL2.GL_TRIANGLES, 36, GL2.GL_UNSIGNED_SHORT, 0);
-
-			gl.glDisableVertexAttribArray(Shader.ATTRIB_POS);
-			gl.glDisableVertexAttribArray(Shader.ATTRIB_COL);
-		}
+		if (curShader == null)
+			return;
+		
+		curShader.useShader(gl);
 	}
 	
 	void drawTestCube(GL2 gl, float dt) {
@@ -186,25 +140,6 @@ public class MeshView extends Screen {
 		gl.glMatrixMode(GL2.GL_MODELVIEW);
 
 		gl.glLoadMatrixf(mat.m, 0);
-
-		gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
-		gl.glEnableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
-		gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
-
-		if (cubeMesh != null) {
-			gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, cubeMesh.getVBO());
-
-			gl.glTexCoordPointer(2, GL2.GL_FLOAT, 0, 0);
-			gl.glColorPointer(3, GL2.GL_FLOAT, 0, 8 * 2 * 4);
-			gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 8 * 2 * 4 + 8 * 3 * 4);
-
-			gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, cubeMesh.getIBO());
-			gl.glDrawElements(GL2.GL_TRIANGLES, 36, GL2.GL_UNSIGNED_SHORT, 0);
-		}
-
-		gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
-		gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
-		gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
 		 
 	}
 	
@@ -302,85 +237,6 @@ public class MeshView extends Screen {
 //			parent.getLogger().log(testShader.toString());
 		}
 		
-		if (meshReloading) {
-			meshReloading = false;
-//			parent.getLogger().log("Here we should be loading shit: " + meshFilename);
-//			
-//			curMesh = new Mesh(meshFilename, gl);
-//			
-//			parent.getLogger().log(curMesh.toString());
-			if (parent.getLogger() != null) {
-				curMesh = new Mesh(parent.getDataFile().getBytes(meshFilename), gl);
-			} else {
-				parent.getLogger().log("Datafile not set");
-			}
-		}
-		
-		if (texReloading) {
-			texReloading = false;
-			parent.getLogger().log("reloading texture: " + texFilename);
-			
-			curTex = new Texture2D(texFilename, true);
-			curTex.getTexture().setTexParameterf(gl, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_LINEAR_MIPMAP_LINEAR);
-			curTex.getTexture().setTexParameterf(gl, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_LINEAR);
-		}
-		
-		if (cubeMesh == null) {
-			//let's change to cylinder
-			float cRad = 1.0f;
-			int cStep = 8;
-			
-			//generate vertices
-			
-			//generate indices
-			
-			//color first, then vertex
-			float [] vertices = {
-					//uv
-					0, 0,
-					1, 0,
-					1, 1,
-					0, 1,
-					1, 0,
-					0, 0,
-					0, 1,
-					1, 1,
-					
-					//colors
-					1, 0, 0,
-					0, 1, 0,
-					0, 0, 1,
-					1, 1, 0,
-					1, 0, 1,
-					0, 1, 1,
-					1, 0.5f,0,
-					0.5f, 1, 0.25f,
-					
-					//vertices
-					-1, -1, 1,
-					1, -1, 1,
-					1, 1, 1,
-					-1, 1, 1,
-					
-					-1, -1, -1,
-					1, -1, -1,
-					1, 1, -1,
-					-1, 1, -1
-			};
-			
-			short [] indices = {
-				0, 1, 2, 0, 2, 3,	//front
-				1, 5, 6, 1, 6, 2,	//right
-				3, 2, 6, 3, 6, 7,	//top
-				4, 0, 3, 4, 3, 7,	//left
-				5, 4, 7, 5, 7, 6,	//back
-				0, 4, 5, 0, 5, 1	//bottom
-			};
-			
-			cubeMesh = Mesh.buildSimpleCube(parent.getContext(), vertices, indices);
-//			parent.getLogger().log(cubeMesh.toString());
-		}
-		
 		if (cullModeChanged) {
 			cullModeChanged = false;
 			gl.glCullFace(curFaceCull);
@@ -397,9 +253,6 @@ public class MeshView extends Screen {
 		SkeletonLoader loader = new SkeletonLoader();
 		
 		skel = loader.loadSkeleton("D:\\bone.txt");
-		//transform
-		if (skel != null)
-			skel.buildTransform();
 	}
 	
 	@Override
