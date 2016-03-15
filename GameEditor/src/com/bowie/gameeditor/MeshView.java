@@ -163,10 +163,10 @@ public class MeshView extends Screen {
 				Skeleton.Bone b = skel.bones.get(i);
 				
 				gl.glColor3f(1, 0, 0);
-				gl.glVertex3f(b.absHead.x, b.absHead.y, b.absHead.z);
+				gl.glVertex3f(b.abs.head.x, b.abs.head.y, b.abs.head.z);
 				
 				gl.glColor3f(0, 0, 1);
-				gl.glVertex3f(b.absTail.x, b.absTail.y, b.absTail.z);
+				gl.glVertex3f(b.abs.tail.x, b.abs.tail.y, b.abs.tail.z);
 			}
 			//now we draw bone matrix
 			float matScale = 1.05f;
@@ -183,9 +183,9 @@ public class MeshView extends Screen {
 				}
 				
 				//root point is absolute head
-				Vector3 matP = skel.bones.get(skelBoneId).absHead;
+				Vector3 matP = skel.bones.get(skelBoneId).abs.head;
 				//rotation is absolute rotation
-				Quaternion matR = skel.bones.get(skelBoneId).absRot;
+				Quaternion matR = skel.bones.get(skelBoneId).abs.rot;
 				
 				Matrix3 boneMat = new Matrix3();
 				matR.toMatrix3(boneMat);
@@ -250,9 +250,18 @@ public class MeshView extends Screen {
 	@Override
 	public void onActive() {
 		//it's safe to create shit here since gl context is valid
-		SkeletonLoader loader = new SkeletonLoader();
+		SkeletonLoader skelLoader = new SkeletonLoader();
+		SkAnimLoader animLoader = new SkAnimLoader();
 		
-		skel = loader.loadSkeleton("D:\\bone.txt");
+		skel = skelLoader.loadSkeleton("D:\\bone_experiment.skel");
+		SkAnim skanim = animLoader.loadSkAnim("D:\\bone_experiment.skanim");
+		
+		if (skanim == null) {
+			parent.getLogger().log("Failed loading skeletal animation");
+		} else {
+			parent.getLogger().log("SKANIM DATA\n");
+			parent.getLogger().log(skanim.toString());
+		}
 	}
 	
 	@Override

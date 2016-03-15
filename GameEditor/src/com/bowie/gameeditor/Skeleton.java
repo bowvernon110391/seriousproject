@@ -14,16 +14,24 @@ public class Skeleton {
 	 * this class contains bone data
 	 */
 	public class Bone {
+		public class Transform {
+			public Vector3 head = new Vector3();
+			public Vector3 tail = new Vector3();
+			public Quaternion rot = new Quaternion();
+		}
+		
 		public String name = "", parentName = "null";
 		public int parentId = -1;
-		public Vector3 head = new Vector3();
-		public Vector3 tail = new Vector3();
-		public Quaternion localRot = new Quaternion();
+//		public Vector3 head = new Vector3();
+//		public Vector3 tail = new Vector3();
+//		public Quaternion localRot = new Quaternion();
+		Transform local = new Transform();
+		Transform abs = new Transform();
 		
 		//will be build by the skeleton
-		public Vector3 absHead = new Vector3();
-		public Vector3 absTail = new Vector3();
-		public Quaternion absRot = new Quaternion();
+//		public Vector3 absHead = new Vector3();
+//		public Vector3 absTail = new Vector3();
+//		public Quaternion absRot = new Quaternion();
 	}
 	
 	
@@ -58,13 +66,13 @@ public class Skeleton {
 			
 			Quaternion.mul(rotFix, rot, b.localRot);
 		} else {*/
-			b.head = head;
-			b.tail = tail;
+			b.local.head = head;
+			b.local.tail = tail;
 			
-			b.localRot = rot;
+			b.local.rot = rot;
 //		}
 				
-		b.localRot.normalize();	//just to be safe
+		b.local.rot.normalize();	//just to be safe
 		//add em
 		bones.add(b);
 	}
@@ -78,21 +86,21 @@ public class Skeleton {
 				// it's root
 //				b.localRot.transformVector(b.head, b.absHead);	//head
 //				b.localRot.transformVector(b.tail, b.absTail); 	//tail
-				b.absHead = new Vector3(b.head);
-				b.absTail = new Vector3(b.tail);
-				b.absRot = new Quaternion(b.localRot); 			//so abs rot = localrot
+				b.abs.head = new Vector3(b.local.head);
+				b.abs.tail = new Vector3(b.local.tail);
+				b.abs.rot = new Quaternion(b.local.rot); 			//so abs rot = localrot
 			} else {
 				// it's relative
 				Bone p = bones.get(b.parentId);		//grab parent
 				
 				//rotation
-				Quaternion.mul(p.absRot, b.localRot, b.absRot);
+				Quaternion.mul(p.abs.rot, b.local.rot, b.abs.rot);
 				
-				p.absRot.transformVector(b.head, b.absHead);
-				Vector3.add(b.absHead, p.absTail, b.absHead);
+				p.abs.rot.transformVector(b.local.head, b.abs.head);
+				Vector3.add(b.abs.head, p.abs.tail, b.abs.head);
 				
-				p.absRot.transformVector(b.tail, b.absTail);
-				Vector3.add(b.absTail, p.absTail, b.absTail);
+				p.abs.rot.transformVector(b.local.tail, b.abs.tail);
+				Vector3.add(b.abs.tail, p.abs.tail, b.abs.tail);
 				
 				/*b.localRot.transformVector(b.head, b.absHead);	//head
 				b.localRot.transformVector(b.tail, b.absTail); 	//tail
@@ -103,7 +111,7 @@ public class Skeleton {
 	
 	@Override
 	public String toString() {
-		String ret = "[ABSOLUTE DATA]\r\n";
+		/*String ret = "[ABSOLUTE DATA]\r\n";
 		for (int i=0; i<bones.size(); i++) {
 			Bone b = bones.get(i);
 			ret += i + ": ";
@@ -123,8 +131,8 @@ public class Skeleton {
 			ret += "head(" + b.head.x + ", " + b.head.y + ", " + b.head.z + ") ";
 			ret += "tail(" + b.tail.x + ", " + b.tail.y + ", " + b.tail.z + ") ";
 			ret += "rot(" + b.localRot.x + ", " + b.localRot.y + ", " + b.localRot.z + ", " + b.localRot.w + ")\r\n";
-		}
+		}*/
 		
-		return ret;
+		return "<NO COMMENT>";
 	}
 }
