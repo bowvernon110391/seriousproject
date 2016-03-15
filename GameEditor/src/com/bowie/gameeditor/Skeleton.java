@@ -34,11 +34,23 @@ public class Skeleton {
 //		public Quaternion absRot = new Quaternion();
 	}
 	
-	
+	// SKELETON DATA
 	public List<Bone> bones = new ArrayList<>();
+	public SkAnim animation = null;	// no animation
 	
 	public Skeleton() {
 		//do nothing
+	}
+	
+	public boolean hasAnimation() {
+		return animation != null;
+	}
+	
+	public boolean attachAnimationData(SkAnim animData) {
+		if (animation == null) {
+			animation = animData;
+		}
+		return false; // We already have animation
 	}
 	
 	public int findBoneId(String name) {

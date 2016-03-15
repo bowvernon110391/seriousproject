@@ -55,6 +55,9 @@ public class MeshView extends Screen {
 	boolean shaderReloading = true;
 	Shader curShader = null;
 	
+	// teh animation control
+	SkelAnimController animCtrl;
+	
 	//shit camera
 	PerspectiveCamera camera = new PerspectiveCamera();
 	
@@ -114,6 +117,41 @@ public class MeshView extends Screen {
 			skelBoneId ++;
 			skelSelChange = true;
 		}
+		
+		if (arg0.getKeyCode() == KeyEvent.VK_B) {
+			// prev
+			if (animCtrl != null) {
+				animCtrl.jumpToKeyframe(-1);
+				animCtrl.recalcData();
+				// log after recalc
+				logPoseData();
+			}
+		}
+		
+		if (arg0.getKeyCode() == KeyEvent.VK_N) {
+			// prev
+			if (animCtrl != null) {
+				animCtrl.jumpToKeyframe(1);
+				animCtrl.recalcData();
+				// log after recalc
+				logPoseData();
+			}
+		}
+	}
+	
+	private void logPoseData() {
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("ac:kf=" + animCtrl.curActionId + ":" + animCtrl.curKeyframe + " ");
+		// sample random bones
+		Vector3 v = animCtrl.finalHead[7];
+		Vector3 v2 = animCtrl.finalTail[7];
+		Quaternion q = animCtrl.finalRot[7];
+		
+		sb.append(String.format("%.4f %.4f %.4f | %.4f %.4f %.4f | %.4f %.4f %.4f %.4f ", v.x, v.y, v.z,
+				v2.x, v2.y, v2.z, q.x, q.y, q.z, q.w));
+		
+		parent.getLogger().log(sb.toString());
 	}
 	
 	private void drawTestShader(GL2 gl, float dt) {
@@ -158,8 +196,18 @@ public class MeshView extends Screen {
 		if (skel == null)
 			return;
 		
+		if (animCtrl == null)
+			return;
+		
 		gl.glBegin(GL2.GL_LINES);
-			for (int i=0; i<skel.bones.size(); i++) {
+			for (int i=0; i<animCtrl.finalHead.length; i++) {				
+				gl.glColor3f(1, 0, 0);
+				gl.glVertex3f(animCtrl.finalHead[i].x, animCtrl.finalHead[i].y, animCtrl.finalHead[i].z);
+				
+				gl.glColor3f(0, 0, 1);
+				gl.glVertex3f(animCtrl.finalTail[i].x, animCtrl.finalTail[i].y, animCtrl.finalTail[i].z);
+			}
+			/*for (int i=0; i<skel.bones.size(); i++) {
 				Skeleton.Bone b = skel.bones.get(i);
 				
 				gl.glColor3f(1, 0, 0);
@@ -167,7 +215,7 @@ public class MeshView extends Screen {
 				
 				gl.glColor3f(0, 0, 1);
 				gl.glVertex3f(b.abs.tail.x, b.abs.tail.y, b.abs.tail.z);
-			}
+			}*/
 			//now we draw bone matrix
 			float matScale = 1.05f;
 			
@@ -183,9 +231,11 @@ public class MeshView extends Screen {
 				}
 				
 				//root point is absolute head
-				Vector3 matP = skel.bones.get(skelBoneId).abs.head;
+//				Vector3 matP = skel.bones.get(skelBoneId).abs.head;
+				Vector3 matP = animCtrl.finalHead[skelBoneId];
 				//rotation is absolute rotation
-				Quaternion matR = skel.bones.get(skelBoneId).abs.rot;
+				Quaternion matR = animCtrl.finalRot[skelBoneId];
+//				Quaternion matR = skel.bones.get(skelBoneId).abs.rot;
 				
 				Matrix3 boneMat = new Matrix3();
 				matR.toMatrix3(boneMat);
@@ -261,6 +311,15 @@ public class MeshView extends Screen {
 		} else {
 			parent.getLogger().log("SKANIM DATA\n");
 			parent.getLogger().log(skanim.toString());
+			
+			// attach data
+			skel.attachAnimationData(skanim);
+			
+			animCtrl = new SkelAnimController();
+			// set to standard data
+			animCtrl.setSkeleton(skel);
+			animCtrl.setAction(1);
+			animCtrl.recalcData();
 		}
 	}
 	
