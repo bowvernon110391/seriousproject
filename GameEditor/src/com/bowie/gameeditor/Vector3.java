@@ -109,4 +109,26 @@ public class Vector3 {
 		res.y = ty;
 		res.z = tz;
 	}
+	
+	private static float cubic(float y0, float y1, float y2, float y3, float u) {
+		float a0, a1, a2, a3, u2;
+		
+		u2 = u * u;
+		a0 = y3 - y2 - y0 + y1;
+		a1 = y0 - y1 - a0;
+		a2 = y2 - y0;
+		a3 = y1;
+		
+		return (a0*u*u2 + a1*u2 + a2*u + a3);
+	}
+	
+	public static void cubicInterp(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 v3, float u, Vector3 res) {
+		float x = cubic(v0.x, v1.x, v2.x, v3.x, u);
+		float y = cubic(v0.y, v1.y, v2.y, v3.y, u);
+		float z = cubic(v0.z, v1.z, v2.z, v3.z, u);
+		
+		res.x = x;
+		res.y = y;
+		res.z = z;
+	}
 }

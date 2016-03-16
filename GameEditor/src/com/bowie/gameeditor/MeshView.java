@@ -49,7 +49,7 @@ public class MeshView extends Screen {
 	public Skeleton skel = null;
 	boolean skelDrawBindPose = false;
 	boolean skelSelChange = false;	//selection has changed
-	int skelBoneId = -1;	//none selected
+	int animActionId = -1;	//none selected
 	
 	//teh shader
 	boolean shaderReloading = true;
@@ -119,13 +119,26 @@ public class MeshView extends Screen {
 		}
 		
 		if (arg0.getKeyCode() == KeyEvent.VK_LEFT) {
-			skelBoneId --;
+			animActionId --;
 			skelSelChange = true;
 		}
 		
 		if (arg0.getKeyCode() == KeyEvent.VK_RIGHT) {
-			skelBoneId ++;
+			animActionId ++;
 			skelSelChange = true;
+		}
+		
+		if (skelSelChange && skel.hasAnimation()) {
+			skelSelChange = false;
+			
+			animActionId = Math.min( skel.getAnimation().num_action-1 , Math.max(0, animActionId) );
+			
+			animState.setTrack(animActionId);
+			animState.setPlayMode(AnimState.PLAY_LOOP);
+			float [] trackTime = {0.0f, 1.0f};
+			
+			skel.getAnimation().getActionById(animState.curTrack).getTrackTime(trackTime);
+			animState.setTrackTimeSet(trackTime[0], trackTime[1]);
 		}
 	}
 	
@@ -187,7 +200,7 @@ public class MeshView extends Screen {
 		
 		animState.prepRender(dt);
 		// calculate pose
-		pose.calculate(animState.curTrack, animState.renderTime);
+		pose.calculateCubic(animState.curTrack, animState.renderTime);
 		
 		// draw em
 		gl.glBegin(GL2.GL_LINES);
@@ -278,7 +291,10 @@ public class MeshView extends Screen {
 				pose = new SkPose(skel);
 				// good to go. set tracktime limit
 				animState.setTrackTime(1.0f);
-				animState.setTrack(skel.getAnimation().getActionId("walk"));
+				
+				animActionId = skel.getAnimation().getActionId("hitfront");
+				
+				animState.setTrack(animActionId);
 				animState.setPlayMode(AnimState.PLAY_LOOP);
 				float [] trackTime = {0.0f, 1.0f};
 				

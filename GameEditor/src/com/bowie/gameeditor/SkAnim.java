@@ -64,8 +64,8 @@ public class SkAnim {
 			trackTime[1] = keyframes.get(keyframes.size()-1).time;
 		}
 		
-		// get keyframe between time
-		public void getKeyframe(float time, Keyframe [] kf) {
+		// get keyframe between time (only return 2 frame)
+		public void getKeyframeLinear(float time, Keyframe [] kf) {
 			if (kf.length < 2)
 				return;
 			// do we have enough data?
@@ -81,6 +81,54 @@ public class SkAnim {
 					// this is it
 					kf[0] = ka;
 					kf[1] = kb;
+					return; // stop
+				}
+			}
+		}
+		
+		// get keyframe between time, and return the next 2 frame, wrapping if necessary
+		public void getKeyfameCubic(float time, Keyframe [] kf) {
+			// cubic needs 4 data
+			if (kf.length < 4)
+				return;
+			// can we?
+			if (keyframes.size() < 2)
+				return;
+			
+			// yaarp
+			int ka_id = 0;	// the first keyframe
+			int kb_id = 0;	// the last keyframe
+			
+			for (int i=0; i<keyframes.size()-1; i++) {
+				Keyframe ka = keyframes.get(i);
+				Keyframe kb = keyframes.get(i+1);
+				
+				// check time. one of them must be set inclusive
+				if (ka.time < time && kb.time >= time) {
+					// this is it
+					kf[0] = ka;
+					kf[1] = kb;
+					// store keyframe id
+					ka_id = i;
+					kb_id = i+1;
+					// the next frame and beyond
+					int kfCount = keyframes.size();
+					// normally, the 3rd and 4th frames are next to last frame
+					int kc_id = kb_id+1;
+					int kd_id = kc_id+1;
+					
+					// but if we exceed, we need to wrap
+					if (kc_id >= kfCount) {
+						kc_id = (kc_id+1) % kfCount; // +1, because 1st and last frame are similar
+					}
+					if (kd_id >= kfCount) {
+						kd_id = (kd_id+1) % kfCount; // +1, because 1st and last frame are similar
+					}
+					
+//					System.out.println("cubic_frame: " + ka_id + ", " + kb_id + ", " + kc_id + ", " + kd_id);
+					// store additional keyframe
+					kf[2] = keyframes.get(kc_id);
+					kf[3] = keyframes.get(kd_id);
 					return; // stop
 				}
 			}

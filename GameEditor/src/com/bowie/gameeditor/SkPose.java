@@ -42,7 +42,7 @@ public class SkPose {
 	 * @param actionId the action id
 	 * @param time the time
 	 */
-	public void calculate(int actionId, float time) {
+	public void calculateLinear(int actionId, float time) {
 		if (!isValid())
 			return;
 		// grab action
@@ -52,12 +52,31 @@ public class SkPose {
 		// got action, let's grab keyframe
 		// the keyframe pointer
 		Keyframe [] kfs = {null, null};
-		ac.getKeyframe(time, kfs);
+		ac.getKeyframeLinear(time, kfs);
 		// then, interpolate
 		if (kfs[0] == null || kfs[1] == null)
 			return;
 		float interpFactor = (time - kfs[0].time) / (kfs[1].time - kfs[0].time);
-		interpolate(interpFactor, kfs[0], kfs[1]);
+		
+		interpolateLinear(interpFactor, kfs[0], kfs[1]);
+	}
+	
+	public void calculateCubic(int actionId, float time) {
+		if (!isValid())
+			return;
+		// grab action
+		Action ac = refData.getAnimation().getActionById(actionId);
+		if (ac == null)
+			return;
+		// got action, grab keyframes
+		Keyframe [] kfs = {null, null, null, null};
+		ac.getKeyfameCubic(time, kfs);
+		// then interpolate
+		if (kfs[0] == null || kfs[1] == null)
+			return;
+		float interpFactor = (time - kfs[0].time) / (kfs[1].time - kfs[0].time);
+		
+		interpolateCubic(interpFactor, kfs[0], kfs[1], kfs[2], kfs[3]);
 	}
 	
 	/**
@@ -65,7 +84,7 @@ public class SkPose {
 	 * @param a the start keyframe
 	 * @param b the end keyframe
 	 */
-	private void interpolate(float factor, Keyframe a, Keyframe b) {
+	private void interpolateLinear(float factor, Keyframe a, Keyframe b) {
 		// sanity check
 		if (a == null || b == null)
 			return;
@@ -88,6 +107,46 @@ public class SkPose {
 			// head and tail
 			Vector3.lerp(pa.head, pb.head, factor, head[i]);
 			Vector3.lerp(pa.tail, pb.tail, factor, tail[i]);
+		}
+	}
+	
+	/**
+	 * This will do cubic interpolation, although only for the position LOL
+	 * @param factor: [0..1] 0 means keyframeA, 1 means keyframeB
+	 * @param a keyframe 0
+	 * @param b keyframe 1
+	 * @param c keyframe 2
+	 * @param d keyframe 3
+	 */
+	private void interpolateCubic(float factor, Keyframe a, Keyframe b, Keyframe c, Keyframe d) {
+		if (a==null || b==null || c==null || d==null)
+			return;
+		// safety
+		if (factor < 0.0f) factor = 0.0f;
+		if (factor > 1.0f) factor = 1.0f;
+		
+		// another safety
+		if (a.pbones.size() < rot.length) return;
+		if (b.pbones.size() < rot.length) return;
+		if (c.pbones.size() < rot.length) return;
+		if (d.pbones.size() < rot.length) return;
+		
+		// do the thing
+		// do the thing
+		for (int i=0; i<rot.length; i++) {
+			PoseBone pa = a.pbones.get(i);
+			PoseBone pb = b.pbones.get(i);
+			PoseBone pc = c.pbones.get(i);
+			PoseBone pd = d.pbones.get(i);
+			
+			// rotation
+			Quaternion.slerp(pa.rot, pb.rot, factor, rot[i]);
+			// head and tail CUBIIC
+//			Vector3.lerp(pa.head, pb.head, factor, head[i]);
+//			Vector3.lerp(pa.tail, pb.tail, factor, tail[i]);
+			Vector3.cubicInterp(pa.head, pb.head, pc.head, pd.head, factor, head[i]);
+			Vector3.cubicInterp(pa.tail, pb.tail, pc.tail, pd.tail, factor, tail[i]);
+			
 		}
 	}
 }
