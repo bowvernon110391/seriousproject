@@ -133,6 +133,61 @@ public class Quaternion {
 		return ret;
 	}
 	
+	public static void slerp(Quaternion q1, Quaternion q2, float u, Quaternion res) {
+		// angle difference
+		float cosom = q1.x*q2.x + q1.y*q2.y + q1.z*q2.z + q1.w * q2.w;
+		// flip if necessary
+		if (cosom < 0.0f) {
+			cosom = -cosom;
+			tmpQ0.x = -q2.x;
+			tmpQ0.y = -q2.y;
+			tmpQ0.z = -q2.z;
+			tmpQ0.w = -q2.w;
+		} else {
+			tmpQ0.x = q2.x;
+			tmpQ0.y = q2.y;
+			tmpQ0.z = q2.z;
+			tmpQ0.w = q2.w;
+		}
+		
+		// store factor here
+		float fa = 1, fb = 0;
+		// now decide if we can do SLERP
+		if (1.0f - cosom > Vector3.EPSILON) {
+			// yarp
+			float om = (float) Math.acos(cosom);
+			float sinom = (float) Math.sin(om);
+			fa = (float) Math.sin((1.0f-u) * om) / sinom;
+			fb = (float) Math.sin(u * om) / sinom;
+		} else {
+			// narp
+			// so do linear interpolation
+			fa = 1.0f - u;
+			fb = u;
+		}
+		
+		// okay, do it
+		res.x = q1.x * fa + tmpQ0.x * fb;
+		res.y = q1.y * fa + tmpQ0.y * fb;
+		res.z = q1.z * fa + tmpQ0.z * fb;
+		res.w = q1.w * fa + tmpQ0.w * fb;
+	}
+	
+	public static void lerp(Quaternion q1, Quaternion q2, float u, Quaternion res) {		
+		// simple lerp
+		tmpQ0.x = q1.x * (1-u) + q2.x * u;
+		tmpQ0.y = q1.y * (1-u) + q2.y * u;
+		tmpQ0.z = q1.z * (1-u) + q2.z * u;
+		tmpQ0.w = q1.w * (1-u) + q2.w * u;
+		
+//		tmpQ0.normalize();
+		
+		res.x = tmpQ0.x;
+		res.y = tmpQ0.y;
+		res.z = tmpQ0.z;
+		res.w = tmpQ0.w;
+	}
+	
 	public void transformVector(Vector3 v, Vector3 res) {
 		//make q0(v, 0.0)
 		tmpQ0.x = v.x;

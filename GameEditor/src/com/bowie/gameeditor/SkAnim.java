@@ -52,6 +52,39 @@ public class SkAnim {
 		
 		public String name = "";
 		List<Keyframe> keyframes = new ArrayList<>();
+		
+		// get min and max time for this action
+		public void getTrackTime(float [] trackTime) {
+			if (trackTime.length < 2 || keyframes.size() == 0)
+				return;
+			
+			// good to save
+			// 1st keyframe and last keyframe
+			trackTime[0] = keyframes.get(0).time;
+			trackTime[1] = keyframes.get(keyframes.size()-1).time;
+		}
+		
+		// get keyframe between time
+		public void getKeyframe(float time, Keyframe [] kf) {
+			if (kf.length < 2)
+				return;
+			// do we have enough data?
+			if (keyframes.size() < 2)
+				return;
+			
+			// yarp
+			for (int i=0; i<keyframes.size()-1; i++) {
+				Keyframe ka = keyframes.get(i);
+				Keyframe kb = keyframes.get(i+1);
+				// check time. one of them must be set inclusive
+				if (ka.time < time && kb.time >= time) {
+					// this is it
+					kf[0] = ka;
+					kf[1] = kb;
+					return; // stop
+				}
+			}
+		}
 	}
 	
 	public int bone_per_kf = 0;
@@ -84,6 +117,22 @@ public class SkAnim {
 	
 	public void addAction(Action a) {
 		actions.add(a);
+	}
+	
+	public int getActionId(String name) {
+		for (int i=0; i<actions.size(); i++) {
+			if (actions.get(i).name.equals(name))
+				return i;
+		}
+		return -1;
+	}
+	
+	public Action getActionById(int id) {
+		if (id < 0)
+			return null;
+		if (id >= actions.size())
+			return null;
+		return actions.get(id);
 	}
 	
 	public Action getActionByName(String name) {

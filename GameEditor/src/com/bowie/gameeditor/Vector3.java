@@ -97,4 +97,16 @@ public class Vector3 {
 		r.normalize();
 		return r;
 	}
+	
+	public static void lerp(Vector3 v1, Vector3 v2, float u, Vector3 res) {
+		float tx, ty, tz;
+		
+		tx = v1.x * (1.0f-u) + v2.x * u;
+		ty = v1.y * (1.0f-u) + v2.y * u;
+		tz = v1.z * (1.0f-u) + v2.z * u;
+		
+		res.x = tx;
+		res.y = ty;
+		res.z = tz;
+	}
 }

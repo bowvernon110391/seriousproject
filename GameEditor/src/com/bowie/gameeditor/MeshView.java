@@ -47,7 +47,7 @@ public class MeshView extends Screen {
 	
 	//skeleton
 	public Skeleton skel = null;
-	boolean skelDrawMatrix = false;
+	boolean skelDrawBindPose = false;
 	boolean skelSelChange = false;	//selection has changed
 	int skelBoneId = -1;	//none selected
 	
@@ -56,10 +56,13 @@ public class MeshView extends Screen {
 	Shader curShader = null;
 	
 	// teh animation control
-	SkelAnimController animCtrl;
+	AnimState animState;
+	SkPose pose;
 	
 	//shit camera
 	PerspectiveCamera camera = new PerspectiveCamera();
+	
+	Quaternion curRot = new Quaternion();
 	
 	public MeshView(Editor p) {
 		super(p);
@@ -94,6 +97,13 @@ public class MeshView extends Screen {
 	}
 	
 	@Override
+	public void onTick(float dt) {
+		// update animstate
+		animState.update(dt);
+		
+	}
+	
+	@Override
 	public void keyPressed(KeyEvent arg0) {
 		// TODO Auto-generated method stub
 		super.keyPressed(arg0);
@@ -105,7 +115,7 @@ public class MeshView extends Screen {
 		
 		//bone data traversal
 		if (arg0.getKeyCode() == 'M') {
-			skelDrawMatrix = !skelDrawMatrix;
+			skelDrawBindPose = !skelDrawBindPose;
 		}
 		
 		if (arg0.getKeyCode() == KeyEvent.VK_LEFT) {
@@ -117,42 +127,8 @@ public class MeshView extends Screen {
 			skelBoneId ++;
 			skelSelChange = true;
 		}
-		
-		if (arg0.getKeyCode() == KeyEvent.VK_B) {
-			// prev
-			if (animCtrl != null) {
-				animCtrl.jumpToKeyframe(-1);
-				animCtrl.recalcData();
-				// log after recalc
-				logPoseData();
-			}
-		}
-		
-		if (arg0.getKeyCode() == KeyEvent.VK_N) {
-			// prev
-			if (animCtrl != null) {
-				animCtrl.jumpToKeyframe(1);
-				animCtrl.recalcData();
-				// log after recalc
-				logPoseData();
-			}
-		}
 	}
 	
-	private void logPoseData() {
-		StringBuilder sb = new StringBuilder();
-		
-		sb.append("ac:kf=" + animCtrl.curActionId + ":" + animCtrl.curKeyframe + " ");
-		// sample random bones
-		Vector3 v = animCtrl.finalHead[7];
-		Vector3 v2 = animCtrl.finalTail[7];
-		Quaternion q = animCtrl.finalRot[7];
-		
-		sb.append(String.format("%.4f %.4f %.4f | %.4f %.4f %.4f | %.4f %.4f %.4f %.4f ", v.x, v.y, v.z,
-				v2.x, v2.y, v2.z, q.x, q.y, q.z, q.w));
-		
-		parent.getLogger().log(sb.toString());
-	}
 	
 	private void drawTestShader(GL2 gl, float dt) {
 		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
@@ -184,8 +160,10 @@ public class MeshView extends Screen {
 	void drawTestSkeleton(GL2 gl, float dt) {
 		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
 
-		Quaternion rot = tracker.getRotation();
-		Matrix4 mat = new Matrix4(rot, new Vector3());
+//		Quaternion rot = tracker.getRotation();
+		
+		// interpolate it		
+		Matrix4 mat = new Matrix4(tracker.getRotation(), new Vector3());
 		
 		gl.glMatrixMode(GL2.GL_PROJECTION);
 		gl.glLoadMatrixf(camera.getProjView().m, 0);
@@ -193,70 +171,48 @@ public class MeshView extends Screen {
 
 		gl.glLoadMatrixf(mat.m, 0);
 		
-		if (skel == null)
-			return;
+//		gl.glBegin(GL2.GL_QUADS);
+//			gl.glColor3f(1, 0, 0);
+//			gl.glVertex3f(-1, -1, 0);
+//			
+//			gl.glColor3f(1, 1, 0);
+//			gl.glVertex3f(1, -1, 0);
+//			
+//			gl.glColor3f(1, 0, 1);
+//			gl.glVertex3f(1, 1, 0);
+//			
+//			gl.glColor3f(0, 1, 0);
+//			gl.glVertex3f(-1, 1, 0);
+//		gl.glEnd();
 		
-		if (animCtrl == null)
-			return;
+		animState.prepRender(dt);
+		// calculate pose
+		pose.calculate(animState.curTrack, animState.renderTime);
 		
+		// draw em
 		gl.glBegin(GL2.GL_LINES);
-			for (int i=0; i<animCtrl.finalHead.length; i++) {				
-				gl.glColor3f(1, 0, 0);
-				gl.glVertex3f(animCtrl.finalHead[i].x, animCtrl.finalHead[i].y, animCtrl.finalHead[i].z);
+			for (int i=0; i<pose.head.length; i++) {
 				
-				gl.glColor3f(0, 0, 1);
-				gl.glVertex3f(animCtrl.finalTail[i].x, animCtrl.finalTail[i].y, animCtrl.finalTail[i].z);
+				Vector3 v = pose.head[i];
+				
+				gl.glColor3f(1, 0, 0);
+				gl.glVertex3f(v.x, v.y, v.z);
+				
+				v = pose.tail[i];
+				gl.glColor3f(1, 1, 0);
+				gl.glVertex3f(v.x, v.y, v.z);
 			}
-			/*for (int i=0; i<skel.bones.size(); i++) {
-				Skeleton.Bone b = skel.bones.get(i);
-				
-				gl.glColor3f(1, 0, 0);
-				gl.glVertex3f(b.abs.head.x, b.abs.head.y, b.abs.head.z);
-				
-				gl.glColor3f(0, 0, 1);
-				gl.glVertex3f(b.abs.tail.x, b.abs.tail.y, b.abs.tail.z);
-			}*/
-			//now we draw bone matrix
-			float matScale = 1.05f;
-			
-			//Draw matrix
-			if (skelDrawMatrix && skel.bones.size() > 0) {
-				//correct the bone id first
-				skelBoneId = skelBoneId >= skel.bones.size() ? skel.bones.size()-1 : skelBoneId < 0 ? 0 : skelBoneId;
-				
-				//log
-				if (skelSelChange) {
-					skelSelChange = false;
-					parent.getLogger().log("bone selected: " + skel.bones.get(skelBoneId).name);
-				}
-				
-				//root point is absolute head
-//				Vector3 matP = skel.bones.get(skelBoneId).abs.head;
-				Vector3 matP = animCtrl.finalHead[skelBoneId];
-				//rotation is absolute rotation
-				Quaternion matR = animCtrl.finalRot[skelBoneId];
-//				Quaternion matR = skel.bones.get(skelBoneId).abs.rot;
-				
-				Matrix3 boneMat = new Matrix3();
-				matR.toMatrix3(boneMat);
-				
-				float [] colors = {
-						1, 0.2f, 0.2f,
-						0.2f, 1, 0.2f,
-						0.2f, 0.2f, 1
-				};
-				
-				//draw em
-				Vector3 vTmp = new Vector3();
-				for (int i=0; i<3; i++) {
-					vTmp.x = matP.x + boneMat.m[i*3] * matScale;
-					vTmp.y = matP.y + boneMat.m[i*3+1] * matScale;
-					vTmp.z = matP.z + boneMat.m[i*3+2] * matScale;
+			// draw bind pose
+			if (skelDrawBindPose) {
+				for (int i=0; i<skel.bones.size(); i++) {
+					Vector3 v = skel.bones.get(i).abs.head;
 					
-					//issue draw call
-					gl.glColor3fv(colors, i*3);
-					gl.glVertex3f(matP.x, matP.y, matP.z);
-					gl.glVertex3f(vTmp.x, vTmp.y, vTmp.z);
+					gl.glColor3f(0, 0, 1);
+					gl.glVertex3f(v.x, v.y, v.z);
+					
+					v = skel.bones.get(i).abs.tail;
+					gl.glColor3f(0, 1, 1);
+					gl.glVertex3f(v.x, v.y, v.z);
 				}
 			}
 		gl.glEnd();
@@ -315,11 +271,20 @@ public class MeshView extends Screen {
 			// attach data
 			skel.attachAnimationData(skanim);
 			
-			animCtrl = new SkelAnimController();
-			// set to standard data
-			animCtrl.setSkeleton(skel);
-			animCtrl.setAction(1);
-			animCtrl.recalcData();
+			// build animstate
+			animState = new AnimState();
+			if (skel.hasAnimation()) {
+				// spawn pose
+				pose = new SkPose(skel);
+				// good to go. set tracktime limit
+				animState.setTrackTime(1.0f);
+				animState.setTrack(skel.getAnimation().getActionId("walk"));
+				animState.setPlayMode(AnimState.PLAY_LOOP);
+				float [] trackTime = {0.0f, 1.0f};
+				
+				skel.getAnimation().getActionById(animState.curTrack).getTrackTime(trackTime);
+				animState.setTrackTimeSet(trackTime[0], trackTime[1]);
+			}
 		}
 	}
 	

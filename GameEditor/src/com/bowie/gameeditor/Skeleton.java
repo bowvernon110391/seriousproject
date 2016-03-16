@@ -46,6 +46,10 @@ public class Skeleton {
 		return animation != null;
 	}
 	
+	public SkAnim getAnimation() {
+		return animation;
+	}
+	
 	public boolean attachAnimationData(SkAnim animData) {
 		if (animation == null) {
 			animation = animData;
