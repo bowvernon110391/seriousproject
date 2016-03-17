@@ -13,6 +13,7 @@ import java.security.CodeSource;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import com.bowie.gameeditor.Mesh.MeshGroup;
 import com.jogamp.opengl.GL2;
 
 public class MeshView extends Screen {
@@ -50,6 +51,9 @@ public class MeshView extends Screen {
 	boolean skelDrawBindPose = false;
 	boolean skelSelChange = false;	//selection has changed
 	int animActionId = -1;	//none selected
+	
+	//mesh for test
+	Mesh mesh = null;
 	
 	//teh shader
 	boolean shaderReloading = true;
@@ -171,6 +175,16 @@ public class MeshView extends Screen {
 	}
 	
 	void drawTestSkeleton(GL2 gl, float dt) {
+		// build mesh vbo
+		if (mesh != null) {
+			if (!mesh.hasVBO() || !mesh.hasIBO()) {
+//				parent.getLogger().log("VBO, IBO before: " + mesh.bufferObjs[0] + ", " + mesh.bufferObjs[1]);
+				mesh.buildBufferObjects(gl);
+				mesh.freeData();
+//				parent.getLogger().log("VBO, IBO after: " + mesh.bufferObjs[0] + ", " + mesh.bufferObjs[1]);
+			}
+		}
+		
 		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
 
 //		Quaternion rot = tracker.getRotation();
@@ -198,6 +212,7 @@ public class MeshView extends Screen {
 //			gl.glVertex3f(-1, 1, 0);
 //		gl.glEnd();
 		
+		// here we interpolate through remaining time since last update
 		animState.prepRender(dt);
 		// calculate pose
 		pose.calculateCubic(animState.curTrack, animState.renderTime);
@@ -229,6 +244,33 @@ public class MeshView extends Screen {
 				}
 			}
 		gl.glEnd();
+		
+		gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+		gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
+		
+		gl.glPushAttrib(GL2.GL_POLYGON_BIT|GL2.GL_LINE_BIT);
+		gl.glLineWidth(1.0f);
+		gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_LINE);
+		
+		
+		if (mesh != null) {
+			if (mesh.hasVBO() && mesh.hasIBO()) {
+				gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, mesh.bufferObjs[0]);
+				gl.glVertexPointer(3, GL2.GL_FLOAT, mesh.vertSizeInBytes, Mesh.OFFSET_POS);
+				gl.glColorPointer(3, GL2.GL_FLOAT, mesh.vertSizeInBytes, Mesh.OFFSET_NORMAL);
+				
+				gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, mesh.bufferObjs[1]);
+				// for each part, draw separately
+				for (MeshGroup g : mesh.groups) {
+					gl.glDrawElements(GL2.GL_TRIANGLES, g.indexCount, GL2.GL_UNSIGNED_SHORT, g.indexStart * 2);
+				}
+			}
+		}
+		
+		gl.glPopAttrib();
+		
+		gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
+		gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
 	}
 
 	@Override
@@ -272,9 +314,14 @@ public class MeshView extends Screen {
 		//it's safe to create shit here since gl context is valid
 		SkeletonLoader skelLoader = new SkeletonLoader();
 		SkAnimLoader animLoader = new SkAnimLoader();
+		MeshLoader meshLoader = new MeshLoader();
 		
 		skel = skelLoader.loadSkeleton("D:\\bone_experiment.skel");
 		SkAnim skanim = animLoader.loadSkAnim("D:\\bone_experiment.skanim");
+		
+		mesh = meshLoader.loadMesh("D:\\bone_experiment.mesh");
+		
+//		parent.getLogger().log(mesh.toString());
 		
 		if (skanim == null) {
 			parent.getLogger().log("Failed loading skeletal animation");
