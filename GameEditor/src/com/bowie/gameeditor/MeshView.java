@@ -56,7 +56,7 @@ public class MeshView extends Screen {
 	Shader curShader = null;
 	
 	// teh animation control
-	AnimState animState;
+	AnimTrack animState;
 	SkPose pose;
 	
 	//shit camera
@@ -134,7 +134,7 @@ public class MeshView extends Screen {
 			animActionId = Math.min( skel.getAnimation().num_action-1 , Math.max(0, animActionId) );
 			
 			animState.setTrack(animActionId);
-			animState.setPlayMode(AnimState.PLAY_LOOP);
+			animState.setPlayMode(AnimTrack.PLAY_LOOP);
 			float [] trackTime = {0.0f, 1.0f};
 			
 			skel.getAnimation().getActionById(animState.curTrack).getTrackTime(trackTime);
@@ -268,6 +268,7 @@ public class MeshView extends Screen {
 	
 	@Override
 	public void onActive() {
+		camera.setFOV(45.0f);
 		//it's safe to create shit here since gl context is valid
 		SkeletonLoader skelLoader = new SkeletonLoader();
 		SkAnimLoader animLoader = new SkAnimLoader();
@@ -285,7 +286,7 @@ public class MeshView extends Screen {
 			skel.attachAnimationData(skanim);
 			
 			// build animstate
-			animState = new AnimState();
+			animState = new AnimTrack();
 			if (skel.hasAnimation()) {
 				// spawn pose
 				pose = new SkPose(skel);
@@ -295,7 +296,7 @@ public class MeshView extends Screen {
 				animActionId = skel.getAnimation().getActionId("hitfront");
 				
 				animState.setTrack(animActionId);
-				animState.setPlayMode(AnimState.PLAY_LOOP);
+				animState.setPlayMode(AnimTrack.PLAY_LOOP);
 				float [] trackTime = {0.0f, 1.0f};
 				
 				skel.getAnimation().getActionById(animState.curTrack).getTrackTime(trackTime);

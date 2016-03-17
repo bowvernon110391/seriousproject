@@ -137,7 +137,7 @@ public class Quaternion {
 		// angle difference
 		float cosom = q1.x*q2.x + q1.y*q2.y + q1.z*q2.z + q1.w * q2.w;
 		// flip if necessary
-		if (cosom < 0.0f) {
+		if (cosom <= 0.0f) {
 			cosom = -cosom;
 			tmpQ0.x = -q2.x;
 			tmpQ0.y = -q2.y;

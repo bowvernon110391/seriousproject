@@ -1,6 +1,6 @@
 package com.bowie.gameeditor;
 
-public class AnimState {
+public class AnimTrack {
 	
 	public int curTrack = 0;			// current track or action
 	public float curTime = 0.0f;	// current track time

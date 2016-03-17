@@ -4,7 +4,7 @@ SKANIM DATA
 
 num_actions: 3 , bone_per_keyframe: 15
 	hitfront, kf: 3
-	stab1, kf: 3
+	stab1, kf: 11
 	walk, kf: 5
 
 Well we're finished
