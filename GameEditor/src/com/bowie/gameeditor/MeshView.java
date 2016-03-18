@@ -51,6 +51,7 @@ public class MeshView extends Screen {
 	boolean skelDrawBindPose = false;
 	boolean skelSelChange = false;	//selection has changed
 	int animActionId = -1;	//none selected
+	boolean useCubicInterpolation = false;
 	
 	//mesh for test
 	Mesh mesh = null;
@@ -132,6 +133,11 @@ public class MeshView extends Screen {
 			skelSelChange = true;
 		}
 		
+		if (arg0.getKeyCode() == KeyEvent.VK_C) {
+			// toggle cubic
+			useCubicInterpolation = !useCubicInterpolation;
+		}
+		
 		if (skelSelChange && skel.hasAnimation()) {
 			skelSelChange = false;
 			
@@ -180,7 +186,7 @@ public class MeshView extends Screen {
 			if (!mesh.hasVBO() || !mesh.hasIBO()) {
 //				parent.getLogger().log("VBO, IBO before: " + mesh.bufferObjs[0] + ", " + mesh.bufferObjs[1]);
 				mesh.buildBufferObjects(gl);
-				mesh.freeData();
+//				mesh.freeData();	// NOOO unless you're skinning in GPU
 //				parent.getLogger().log("VBO, IBO after: " + mesh.bufferObjs[0] + ", " + mesh.bufferObjs[1]);
 			}
 		}
@@ -215,7 +221,17 @@ public class MeshView extends Screen {
 		// here we interpolate through remaining time since last update
 		animState.prepRender(dt);
 		// calculate pose
-		pose.calculateCubic(animState.curTrack, animState.renderTime);
+//		
+//		if (useCubicInterpolation)
+//			pose.calculateCubic(animState.curTrack, animState.renderTime);
+//		else
+			pose.calculateLinear(animState.curTrack, animState.renderTime);
+		// aand, let's skin
+		pose.CPUSkin(gl, mesh);
+		
+		float matScale = 0.5f;
+		
+		Matrix3 tmpMat3 = new Matrix3();
 		
 		// draw em
 		gl.glBegin(GL2.GL_LINES);
@@ -230,6 +246,29 @@ public class MeshView extends Screen {
 				gl.glColor3f(1, 1, 0);
 				gl.glVertex3f(v.x, v.y, v.z);
 			}
+			for (int i=0; i<pose.rot.length; i++) {
+				pose.rot[i].toMatrix3(tmpMat3);
+				Vector3 v = pose.tail[i];
+				float [] m = tmpMat3.m;
+				
+				gl.glColor3f(1, 0, 0);
+				gl.glVertex3f(v.x, v.y, v.z);
+				gl.glVertex3f(v.x + m[0] * matScale, 
+						v.y + m[1] * matScale, 
+						v.z + m[2] * matScale);
+				
+				gl.glColor3f(0, 1, 0);
+				gl.glVertex3f(v.x, v.y, v.z);
+				gl.glVertex3f(v.x + m[3] * matScale, 
+						v.y + m[4] * matScale, 
+						v.z + m[5] * matScale);
+				
+				gl.glColor3f(0, 0, 1);
+				gl.glVertex3f(v.x, v.y, v.z);
+				gl.glVertex3f(v.x + m[6] * matScale, 
+						v.y + m[7] * matScale, 
+						v.z + m[8] * matScale);
+			}
 			// draw bind pose
 			if (skelDrawBindPose) {
 				for (int i=0; i<skel.bones.size(); i++) {
@@ -241,6 +280,30 @@ public class MeshView extends Screen {
 					v = skel.bones.get(i).abs.tail;
 					gl.glColor3f(0, 1, 1);
 					gl.glVertex3f(v.x, v.y, v.z);
+				}
+				// also draw matrix
+				for (int i=0; i<skel.bones.size(); i++) {
+					Vector3 v = skel.bones.get(i).abs.tail;
+					skel.bones.get(i).abs.rot.toMatrix3(tmpMat3);
+					float [] m = tmpMat3.m;
+					
+					gl.glColor3f(1, 0, 0);
+					gl.glVertex3f(v.x, v.y, v.z);
+					gl.glVertex3f(v.x + m[0] * matScale, 
+							v.y + m[1] * matScale, 
+							v.z + m[2] * matScale);
+					
+					gl.glColor3f(0, 1, 0);
+					gl.glVertex3f(v.x, v.y, v.z);
+					gl.glVertex3f(v.x + m[3] * matScale, 
+							v.y + m[4] * matScale, 
+							v.z + m[5] * matScale);
+					
+					gl.glColor3f(0, 0, 1);
+					gl.glVertex3f(v.x, v.y, v.z);
+					gl.glVertex3f(v.x + m[6] * matScale, 
+							v.y + m[7] * matScale, 
+							v.z + m[8] * matScale);
 				}
 			}
 		gl.glEnd();
@@ -256,8 +319,11 @@ public class MeshView extends Screen {
 		if (mesh != null) {
 			if (mesh.hasVBO() && mesh.hasIBO()) {
 				gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, mesh.bufferObjs[0]);
-				gl.glVertexPointer(3, GL2.GL_FLOAT, mesh.vertSizeInBytes, Mesh.OFFSET_POS);
 				gl.glColorPointer(3, GL2.GL_FLOAT, mesh.vertSizeInBytes, Mesh.OFFSET_NORMAL);
+				
+				// use temp buffer
+				gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, mesh.tmpVBO);
+				gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 0);				
 				
 				gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, mesh.bufferObjs[1]);
 				// for each part, draw separately
@@ -322,6 +388,8 @@ public class MeshView extends Screen {
 		mesh = meshLoader.loadMesh("D:\\bone_experiment.mesh");
 		
 //		parent.getLogger().log(mesh.toString());
+		if (skel != null)
+			parent.getLogger().log(skel.toString());
 		
 		if (skanim == null) {
 			parent.getLogger().log("Failed loading skeletal animation");
@@ -340,7 +408,7 @@ public class MeshView extends Screen {
 				// good to go. set tracktime limit
 				animState.setTrackTime(1.0f);
 				
-				animActionId = skel.getAnimation().getActionId("hitfront");
+				animActionId = 0;
 				
 				animState.setTrack(animActionId);
 				animState.setPlayMode(AnimTrack.PLAY_LOOP);

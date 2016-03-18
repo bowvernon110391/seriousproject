@@ -2,6 +2,7 @@ package com.bowie.gameeditor;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +62,11 @@ public class Mesh {
 	public int vertSizeInBytes = 32;	// default
 	// the VBO + IBO
 	public int[] bufferObjs = {-1, -1};	// no VBO, no IBO
+	// this is this instance's temporary buffer
+	// used for weighted mesh to store some temporary
+	// calculation (CPU SKINNING)
+	public FloatBuffer tmpBuffer = null;
+	public int tmpVBO = -1;
 	
 	
 	// return various data offset
@@ -94,6 +100,10 @@ public class Mesh {
 		return groups.get(id);
 	}
 	
+	public FloatBuffer getTempBuffer() {
+		return tmpBuffer;
+	}
+	
 	// would allocate enough vertices data. 
 	// may only be called once, for any previous data is gonna be rewritten 
 	public void allocateVBuffer(int size, int version) {
@@ -110,6 +120,11 @@ public class Mesh {
 			vertices = new MeshVertex_v2[size];
 			for (int i=0; i<size; i++)
 				vertices[i] = new MeshVertex_v2();
+			
+			// also, spawn temporary buffer
+			ByteBuffer bb = ByteBuffer.allocateDirect(size * 12).order(ByteOrder.nativeOrder());
+			this.tmpBuffer = bb.asFloatBuffer();
+			this.tmpBuffer.clear();
 		}
 	}
 	
@@ -220,6 +235,13 @@ public class Mesh {
 			return false;
 		// good to go
 		gl.glGenBuffers(2, bufferObjs, 0);
+		
+		// also, request one for temp buffer
+		if (tmpBuffer != null) {
+			int [] id = {-1};
+			gl.glGenBuffers(1, id, 0);
+			tmpVBO = id[0];
+		}
 		
 		// build VBO first
 		ByteBuffer vBuffer = this.buildVBuffer();

@@ -27,6 +27,7 @@ public class Skeleton {
 //		public Quaternion localRot = new Quaternion();
 		Transform local = new Transform();
 		Transform abs = new Transform();
+//		Transform invBind = new Transform();	// hold inverse bind pose
 		
 		//will be build by the skeleton
 //		public Vector3 absHead = new Vector3();
@@ -122,6 +123,7 @@ public class Skeleton {
 				b.localRot.transformVector(b.tail, b.absTail); 	//tail
 				b.absRot = new Quaternion(b.localRot); 			//so abs rot = localrot
 */			}
+			// now store the inverse bind pose
 		}
 	}
 	
@@ -148,7 +150,12 @@ public class Skeleton {
 			ret += "tail(" + b.tail.x + ", " + b.tail.y + ", " + b.tail.z + ") ";
 			ret += "rot(" + b.localRot.x + ", " + b.localRot.y + ", " + b.localRot.z + ", " + b.localRot.w + ")\r\n";
 		}*/
+		String ret = "";
 		
-		return "<NO COMMENT>";
+		for (int i=0; i<bones.size(); i++) {
+			Bone b = bones.get(i);
+			ret += i + ": " + b.name + "\n";
+		}
+		return ret;
 	}
 }

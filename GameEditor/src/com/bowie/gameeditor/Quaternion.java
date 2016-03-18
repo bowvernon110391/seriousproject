@@ -136,7 +136,7 @@ public class Quaternion {
 	public static void slerp(Quaternion q1, Quaternion q2, float u, Quaternion res) {
 		// angle difference
 		float cosom = q1.x*q2.x + q1.y*q2.y + q1.z*q2.z + q1.w * q2.w;
-		// flip if necessary
+		// flip if necessary (AIM for shortest)
 		if (cosom <= 0.0f) {
 			cosom = -cosom;
 			tmpQ0.x = -q2.x;
@@ -171,6 +171,8 @@ public class Quaternion {
 		res.y = q1.y * fa + tmpQ0.y * fb;
 		res.z = q1.z * fa + tmpQ0.z * fb;
 		res.w = q1.w * fa + tmpQ0.w * fb;
+		
+//		res.normalize();
 	}
 	
 	public static void lerp(Quaternion q1, Quaternion q2, float u, Quaternion res) {		
@@ -186,6 +188,8 @@ public class Quaternion {
 		res.y = tmpQ0.y;
 		res.z = tmpQ0.z;
 		res.w = tmpQ0.w;
+		
+		res.normalize();
 	}
 	
 	public void transformVector(Vector3 v, Vector3 res) {

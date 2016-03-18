@@ -110,7 +110,7 @@ public class Vector3 {
 		res.z = tz;
 	}
 	
-	private static float cubic(float y0, float y1, float y2, float y3, float u) {
+	public static float cubic(float y0, float y1, float y2, float y3, float u) {
 		float a0, a1, a2, a3, u2;
 		
 		u2 = u * u;
@@ -122,10 +122,24 @@ public class Vector3 {
 		return (a0*u*u2 + a1*u2 + a2*u + a3);
 	}
 	
+	public static float catmullRom(float y0, float y1, float y2, float y3, float u) {
+		float a0, a1, a2, a3, u2;
+		a0 = (float) (-0.5 * y0 + 1.5 * y1 - 1.5 * y2 + 0.5 * y3);
+		a1 = (float) (y0 - 2.5 * y1 + 2 * y2 - 0.5 * y3);
+		a2 = (float) (-0.5 * y0 + 0.5 * y2);
+		a3 = y1;
+		u2 = u*u;
+		return (a0 * u * u2 + a1 * u2 + a2 * u + a3);
+	}
+	
 	public static void cubicInterp(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 v3, float u, Vector3 res) {
 		float x = cubic(v0.x, v1.x, v2.x, v3.x, u);
 		float y = cubic(v0.y, v1.y, v2.y, v3.y, u);
 		float z = cubic(v0.z, v1.z, v2.z, v3.z, u);
+//
+//		float x = catmullRom(v0.x, v1.x, v2.x, v3.x, u);
+//		float y = catmullRom(v0.y, v1.y, v2.y, v3.y, u);
+//		float z = catmullRom(v0.z, v1.z, v2.z, v3.z, u);
 		
 		res.x = x;
 		res.y = y;
