@@ -152,23 +152,23 @@ public class SkPose {
 		interpolateLinear(interpFactor, kfs[0], kfs[1]);
 	}
 	
-//	public void calculateCubic(int actionId, float time) {
-//		if (!isValid())
-//			return;
-//		// grab action
-//		Action ac = refData.getAnimation().getActionById(actionId);
-//		if (ac == null)
-//			return;
-//		// got action, grab keyframes
-//		Keyframe [] kfs = {null, null, null, null};
-//		ac.getKeyfameCubic(time, kfs);
-//		// then interpolate
-//		if (kfs[0] == null || kfs[1] == null)
-//			return;
-//		float interpFactor = (time - kfs[0].time) / (kfs[1].time - kfs[0].time);
-//		
-//		interpolateCubic(interpFactor, kfs[0], kfs[1], kfs[2], kfs[3]);
-//	}
+	public void calculateCubic(int actionId, float time) {
+		if (!isValid())
+			return;
+		// grab action
+		Action ac = refData.getAnimation().getActionById(actionId);
+		if (ac == null)
+			return;
+		// got action, grab keyframes
+		Keyframe [] kfs = {null, null, null, null};
+		ac.getKeyfameCubic(time, kfs);
+		// then interpolate
+		if (kfs[0] == null || kfs[1] == null)
+			return;
+		float interpFactor = (time - kfs[0].time) / (kfs[1].time - kfs[0].time);
+		
+		interpolateCubic(interpFactor, kfs[0], kfs[1], kfs[2], kfs[3]);
+	}
 	
 	/**
 	 * @param factor between [0..1]. 0 means a, 1 means b
@@ -230,36 +230,80 @@ public class SkPose {
 	 * @param c keyframe 2
 	 * @param d keyframe 3
 	 */
-//	private void interpolateCubic(float factor, Keyframe a, Keyframe b, Keyframe c, Keyframe d) {
-//		if (a==null || b==null || c==null || d==null)
-//			return;
-//		// safety
-//		if (factor < 0.0f) factor = 0.0f;
-//		if (factor > 1.0f) factor = 1.0f;
-//		
-//		// another safety
-//		if (a.pbones.size() < rot.length) return;
-//		if (b.pbones.size() < rot.length) return;
-//		if (c.pbones.size() < rot.length) return;
-//		if (d.pbones.size() < rot.length) return;
-//		
-//		// do the thing
-//		// do the thing
-//		for (int i=0; i<rot.length; i++) {
-//			PoseBone pa = a.pbones.get(i);
-//			PoseBone pb = b.pbones.get(i);
-//			PoseBone pc = c.pbones.get(i);
-//			PoseBone pd = d.pbones.get(i);
-//			
-////			rot[i] = new Quaternion(pa.rot);
-//			Quaternion.slerp(pa.rot, pb.rot, factor, rot[i]);
-////			Quaternion.lerp(pa.rot, pb.rot, factor, rot[i]);
-//			// head and tail CUBIIC
-////			Vector3.lerp(pa.head, pb.head, factor, head[i]);
-////			Vector3.lerp(pa.tail, pb.tail, factor, tail[i]);
-//			Vector3.cubicInterp(pa.head, pb.head, pc.head, pd.head, factor, head[i]);
-//			Vector3.cubicInterp(pa.tail, pb.tail, pc.tail, pd.tail, factor, tail[i]);
-//			
-//		}
-//	}
+	private void interpolateCubic(float factor, Keyframe a, Keyframe b, Keyframe c, Keyframe d) {
+		if (a==null || b==null || c==null || d==null)
+			return;
+		// safety
+		if (factor < 0.0f) factor = 0.0f;
+		if (factor > 1.0f) factor = 1.0f;
+		
+		// another safety
+		if (a.pbones.size() < rot.length) return;
+		if (b.pbones.size() < rot.length) return;
+		if (c.pbones.size() < rot.length) return;
+		if (d.pbones.size() < rot.length) return;
+		
+		// do the thing
+		// do the thing
+		Vector3 vTmp = new Vector3();
+		Vector3 vUp = new Vector3(0,1,0);
+		Quaternion qTmp;
+		Vector3 vRotAxis = new Vector3();
+		for (int i=0; i<rot.length; i++) {
+			PoseBone pa = a.pbones.get(i);
+			PoseBone pb = b.pbones.get(i);
+			PoseBone pc = c.pbones.get(i);
+			PoseBone pd = d.pbones.get(i);
+			
+			// doing slerp is not enough, we must use cubic for
+			// rotation also. But I dont know how, so, match
+			// rotation with joint head-tail
+			Quaternion.slerp(pa.rot, pb.rot, factor, rot[i]);
+
+			// head and tail CUBIIC
+			Vector3.cubicInterp(pa.head, pb.head, pc.head, pd.head, factor, head[i]);
+			Vector3.cubicInterp(pa.tail, pb.tail, pc.tail, pd.tail, factor, tail[i]);
+			
+			// next we match it with head and tail direction (ON ITS Y)
+			Vector3.sub(tail[i], head[i], vTmp);
+			// normalize, next we find quaternion's y
+			vTmp.normalize();
+			vUp.x = vUp.z = 0;
+			vUp.y = 1;
+			rot[i].transformVector(vUp, vUp);
+			// grab cross product
+			Vector3.cross(vUp, vTmp, vRotAxis);
+//			vRotAxis.normalize();
+			// grab the angle difference
+			float angleDiff = Vector3.dot(vUp, vTmp);
+			// get the arccos
+			// THIS FUNCTION IS A SAVIOUR!!!!!!
+			float angleRot = (float) Math.acos(angleDiff);			
+			qTmp = Quaternion.makeAxisRot(vRotAxis, angleRot);
+			// multiply it
+			Quaternion.mul(qTmp, rot[i], rot[i]);
+			
+			// now we calculate skin rot
+			//===============================================================================
+			// the difference
+			// -rot
+			Quaternion bindRot = refData.bones.get(i).abs.rot;
+			Quaternion fwdRot = rot[i];
+			Quaternion.mul(fwdRot, bindRot.conjugated(), this.skinRot[i]);
+			
+			// -trans
+			Vector3 bindPos = refData.bones.get(i).abs.head;
+			Vector3 fwdPos = head[i];
+			
+			skinHead[i].x = -bindPos.x;
+			skinHead[i].y = -bindPos.y;
+			skinHead[i].z = -bindPos.z;
+			
+			skinRot[i].transformVector(skinHead[i], skinHead[i]);
+			
+			skinHead[i].x += fwdPos.x;
+			skinHead[i].y += fwdPos.y;
+			skinHead[i].z += fwdPos.z;
+		}
+	}
 }

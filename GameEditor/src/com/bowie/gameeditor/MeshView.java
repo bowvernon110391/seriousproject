@@ -222,9 +222,9 @@ public class MeshView extends Screen {
 		animState.prepRender(dt);
 		// calculate pose
 //		
-//		if (useCubicInterpolation)
-//			pose.calculateCubic(animState.curTrack, animState.renderTime);
-//		else
+		if (useCubicInterpolation)
+			pose.calculateCubic(animState.curTrack, animState.renderTime);
+		else
 			pose.calculateLinear(animState.curTrack, animState.renderTime);
 		// aand, let's skin
 		pose.CPUSkin(gl, mesh);
