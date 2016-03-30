@@ -382,10 +382,10 @@ public class MeshView extends Screen {
 		SkAnimLoader animLoader = new SkAnimLoader();
 		MeshLoader meshLoader = new MeshLoader();
 		
-		skel = skelLoader.loadSkeleton("D:\\bone_experiment.skel");
-		SkAnim skanim = animLoader.loadSkAnim("D:\\bone_experiment.skanim");
+		skel = skelLoader.loadSkeleton("D:\\projects\\data\\man.skel");
+		SkAnim skanim = animLoader.loadSkAnim("D:\\projects\\data\\man.skanim");
 		
-		mesh = meshLoader.loadMesh("D:\\bone_experiment.mesh");
+		mesh = meshLoader.loadMesh("D:\\projects\\data\\man.mesh");
 		
 //		parent.getLogger().log(mesh.toString());
 		if (skel != null)
@@ -410,7 +410,7 @@ public class MeshView extends Screen {
 				
 				animActionId = 0;
 				
-				animState.setTrack(animActionId);
+				animState.setTrack(skel.getAnimation().getActionId("walk"));
 				animState.setPlayMode(AnimTrack.PLAY_LOOP);
 				float [] trackTime = {0.0f, 1.0f};
 				
