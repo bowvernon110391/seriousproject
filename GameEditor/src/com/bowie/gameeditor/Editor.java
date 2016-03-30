@@ -37,7 +37,7 @@ public class Editor implements ScriptCmdListener {
 	private float timeElapsed = 0.0f;
 	
 	private int tickPerSec = 10;	//10 FPS update rate
-	private int renderPerSec = 50;	//60 FPS render rate
+	private int renderPerSec = 60;	//60 FPS render rate
 	
 	//editor stat
 	private boolean isPlaying = true;

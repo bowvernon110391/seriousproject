@@ -8,7 +8,7 @@ public class AnimTrack {
 	public float minTime = 0.0f;
 	public float maxTime = 1.0f;
 	
-	public float fps = 24.0f;	// standard	
+	public float fps = 60.0f;	// standard	
 	
 	public static final int PLAY_LOOP = 0;
 	public static final int PLAY_CLAMP = 1;
@@ -44,6 +44,16 @@ public class AnimTrack {
 	public void update(float dt) {
 		curTime += fps * dt;
 		curTime = correctTime(curTime);
+	}
+	
+	public void setRenderPhase(float p) {
+		// p must be [0..1]
+		if (p < 0.0f || p > 1.0f) {
+			p -= (float)Math.floor(p);
+		}
+		
+		// we're good
+		renderTime = minTime * (1.0f-p) + maxTime * p;
 	}
 	
 	private float correctTime(float time) {

@@ -29,7 +29,7 @@ public class PerspectiveCamera extends Camera {
 	
 	public void setClip(float zn, float zf) {
 		znear = zn;
-		zf = zf;
+		zfar = zf;
 		
 		projDirty = true;
 	}
@@ -99,6 +99,7 @@ public class PerspectiveCamera extends Camera {
 		
 		if (recalcProjView) {
 			//ok, do new mult
+//			recalcProjView = false;
 			Matrix4.mul(projMat, viewMat, projViewMat);
 		}
 		

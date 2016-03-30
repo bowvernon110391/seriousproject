@@ -407,7 +407,7 @@ public class MeshView extends Screen {
 				pose = new SkPose(skel);
 				// good to go. set tracktime limit
 				animState.setTrackTime(1.0f);
-				
+				animState.setFPS(60.0f);
 				animActionId = 0;
 				
 				animState.setTrack(skel.getAnimation().getActionId("walk"));

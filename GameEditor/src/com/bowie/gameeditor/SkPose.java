@@ -271,17 +271,24 @@ public class SkPose {
 			vUp.x = vUp.z = 0;
 			vUp.y = 1;
 			rot[i].transformVector(vUp, vUp);
-			// grab cross product
-			Vector3.cross(vUp, vTmp, vRotAxis);
+			
 //			vRotAxis.normalize();
 			// grab the angle difference
 			float angleDiff = Vector3.dot(vUp, vTmp);
-			// get the arccos
-			// THIS FUNCTION IS A SAVIOUR!!!!!!
-			float angleRot = (float) Math.acos(angleDiff);			
-			qTmp = Quaternion.makeAxisRot(vRotAxis, angleRot);
-			// multiply it
-			Quaternion.mul(qTmp, rot[i], rot[i]);
+			// now, only do that thing if the angle difference > EPSILON
+			
+			// grab cross product
+			Vector3.cross(vUp, vTmp, vRotAxis);
+			
+			if (Vector3.dot(vRotAxis, vRotAxis) > Vector3.EPSILON) {
+				float angleRot = (float) Math.acos(angleDiff);
+				// get the arccos
+				// THIS FUNCTION IS A SAVIOUR!!!!!!
+				qTmp = Quaternion.makeAxisRot(vRotAxis, angleRot);
+				// multiply it
+				Quaternion.mul(qTmp, rot[i], rot[i]);
+			}
+			
 			
 			// now we calculate skin rot
 			//===============================================================================
