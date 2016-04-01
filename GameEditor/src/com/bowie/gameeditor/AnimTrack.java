@@ -31,6 +31,10 @@ public class AnimTrack {
 		fps = fps_;
 	}
 	
+	public float getPhaseSpeed() {
+		return fps / ((maxTime-minTime) + 1);
+	}
+	
 	public void setTrackTimeSet(float min, float max) {
 		minTime = min;
 		maxTime = max;

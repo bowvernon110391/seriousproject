@@ -1,5 +1,7 @@
 package com.bowie.gameeditor;
 
+import com.jogamp.opengl.GL2;
+
 /**
  * @author Bowie
  * represent the View part of MVC pattern
@@ -25,10 +27,10 @@ public class BaseView {
 	public void update(float dt) {
 	}
 	
-	public void preRender(float dt) {
+	public void preRender(GL2 gl, float dt) {
 	}
 	
-	public void render(float dt) {
+	public void render(GL2 gl, float dt) {
 		
 	}
 }

@@ -36,7 +36,7 @@ public class Editor implements ScriptCmdListener {
 	private long timeLast = System.currentTimeMillis();
 	private float timeElapsed = 0.0f;
 	
-	private int tickPerSec = 10;	//10 FPS update rate
+	private int tickPerSec = 30;	//10 FPS update rate
 	private int renderPerSec = 60;	//60 FPS render rate
 	
 	//editor stat
@@ -293,69 +293,5 @@ public class Editor implements ScriptCmdListener {
 		logger.log("You entered: " + cmdString);
 		//1st, parse
 		//2nd, execute
-	}
-
-	/*public void testTexture(String filename) {
-		MeshView m = (MeshView) getCurrentView();
-		m.setTexture(filename);
-	}*/
-	
-	public void testSkeleton(String filename) {
-		try {
-			//open it
-			BufferedReader br = new BufferedReader(new FileReader(filename));
-			//to hold a new line
-			String line;
-			//to hold skeleton data
-			Skeleton skel = new Skeleton();
-			while ((line = br.readLine()) != null ) {
-				line = line.trim();
-				/*if (line.length() > 3) {
-					//good to go
-					String [] data = line.split("|");
-					logger.log("we got " + data.length + " tokens");
-					logger.log("the first: " + data[0] + " the last: " + data[data.length-1]);
-				} else {
-					logger.log("skipped short string: " + line);
-				}*/
-				if (line.length() > 3) {
-//					logger.log("SKELETON: " + line);
-					String [] data = line.split(Pattern.quote("|"));
-//					logger.log("datalen: " + data.length);
-					
-					if (data.length >= 6) {
-						String boneName = data[0];
-						String parentName = data[1];
-						int parentId = Integer.parseInt(data[2]);
-						
-						String [] headPos = data[3].split("\\s");
-						String [] tailPos = data[4].split("\\s");
-						String [] boneRot = data[5].split("\\s");
-						
-						Vector3 head = new Vector3(Float.parseFloat(headPos[0]), Float.parseFloat(headPos[1]), Float.parseFloat(headPos[2]));
-						Vector3 tail = new Vector3(Float.parseFloat(tailPos[0]), Float.parseFloat(tailPos[1]), Float.parseFloat(tailPos[2]));
-						Quaternion brot = new Quaternion(Float.parseFloat(boneRot[1]), Float.parseFloat(boneRot[2]), Float.parseFloat(boneRot[3]), Float.parseFloat(boneRot[0]));
-						
-						skel.addBone(boneName, parentName, head, tail, brot);
-					}
-				}
-			}			
-			br.close();
-			
-			//send to meshview
-			MeshView m = (MeshView) getCurrentView();
-			skel.buildTransform();
-			
-			//now log fully
-			logger.log(skel.toString());
-			
-			m.skel = skel;
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 }

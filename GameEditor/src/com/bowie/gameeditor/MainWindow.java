@@ -217,20 +217,6 @@ public class MainWindow {
 		paneMesh.add(paneMeshBtnGrp);
 		paneMeshBtnGrp.setLayout(new GridLayout(3, 1, 0, 5));
 
-		JButton btnLoadSkeleton = new JButton("Load Skeleton");
-		btnLoadSkeleton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				JFileChooser jfc = new JFileChooser();
-
-				int nCode = jfc.showOpenDialog(frmGameEditor);
-				if (nCode == JFileChooser.APPROVE_OPTION) {
-					// got it
-					edt.testSkeleton(jfc.getSelectedFile().getAbsolutePath());
-				}
-			}
-		});
-		paneMeshBtnGrp.add(btnLoadSkeleton);
-
 		JPanel paneObject = new JPanel();
 		paneToolTab.addTab("Object", null, paneObject, null);
 

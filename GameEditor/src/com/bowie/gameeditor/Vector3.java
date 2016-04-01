@@ -22,6 +22,12 @@ public class Vector3 {
 		z = v.z;
 	}
 	
+	public void setTo(Vector3 v) {
+		x = v.x;
+		y = v.y;
+		z = v.z;
+	}
+	
 	//c = a + b
 	public static void add(Vector3 a, Vector3 b, Vector3 c) {
 		float cx, cy, cz;

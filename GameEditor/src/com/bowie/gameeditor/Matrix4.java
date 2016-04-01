@@ -41,6 +41,30 @@ public class Matrix4 {
         m[3]=0.0f;      m[7]=0.0f;    m[11]=0.0f;    m[15]=1.0f;
 	}
 	
+	public void setRotation(Vector3 right, Vector3 up, Vector3 front) {
+		m[0] = right.x;
+		m[1] = right.y;
+		m[2] = right.z;
+		m[3] = 0.0f;
+		
+		m[4] = up.x;
+		m[5] = up.y;
+		m[6] = up.z;
+		m[7] = 0.0f;
+		
+		m[8] = front.x;
+		m[9] = front.y;
+		m[10] = front.z;
+		m[11] = 0.0f;
+	}
+	
+	public void setPosition(Vector3 p) {
+		m[12] = p.x;
+		m[13] = p.y;
+		m[14] = p.z;
+		m[15] = 1.0f;
+	}
+	
 	public void quickInvert() {
 		//for rendering purpose, the matrix needs to be correct tho
 		float f;

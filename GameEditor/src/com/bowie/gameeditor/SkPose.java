@@ -48,6 +48,35 @@ public class SkPose {
 		}
 	}
 	
+	/**
+	 * This will calculate blended pose
+	 * THIS ONLY CALCULATE SKINNING DATA!!!!
+	 * DO NOT WASTE CPU FOR BLENDING DEBUG DATA
+	 * @param pA	poseA [from]
+	 * @param pB	poseB [to]
+	 * @param interp	interpolation amount [0..1]
+	 * @param pRes	where to store the pose
+	 */
+	public static void blendPose(SkPose pA, SkPose pB, float interp, SkPose pRes) {
+		// heavily check for stupid configuration
+		if (pA == null || pB == null || pRes == null)
+			return;
+		if (pA.skinHead.length != pB.skinHead.length || pA.skinHead.length != pRes.skinHead.length)
+			return;
+		
+		// now correct interpolation
+		if (interp < 0.0f) interp = 0.0f;
+		if (interp > 1.0f) interp = 1.0f;
+		
+		// now we can continue
+		for (int i=0; i<pA.skinHead.length; i++) {
+			// interpolate rotation
+			Quaternion.slerp(pA.skinRot[i], pB.skinRot[i], interp, pRes.skinRot[i]);
+			// interpolate head
+			Vector3.lerp(pA.skinHead[i], pB.skinHead[i], interp, pRes.skinHead[i]);
+		}
+	}
+	
 	public boolean isValid() {
 		return refData != null;
 	}
