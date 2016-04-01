@@ -22,25 +22,29 @@ public class MActorState extends BaseModel {
 	public Vector3 pos = new Vector3();
 	public Vector3 vel = new Vector3();
 	public Vector3 targetVel = new Vector3();
-	public float accel = 15.0f;
-	public float maxVel = 15.0f;	// standard
+	public float accel = 20.0f;
+	public float maxVel = 10.0f;	// standard
 	
-	public float width = 0.8f;		
-	public float height = 1.8f;
+	public float width = 0.6f;		
+	public float height = 1.85f;
 	public Quaternion rot = new Quaternion();	// to hold rotation data
 	public Quaternion targetRot = new Quaternion();	// where should I look
-	public float rotSpeed = 15.0f;			// how quick do we turn?
+	public float rotSpeed = 10.0f;			// how quick do we turn?
 	
 	// must be replaced by state machine!!
 	public int state = STATE_IDLE;
 	boolean onGround = true;
 	
-	// here be states
 	// here be handle to animation states (for event trigger)
+	private AnimStateManager animState;
+	
 	public void setState(int state) {
 		this.state = state;
 		
 		// inform the animation state
+		if (animState != null) {
+			animState.changeTo(state);
+		}
 	}
 	
 	@Override
@@ -73,6 +77,11 @@ public class MActorState extends BaseModel {
 				vel.scale(vLen);
 			}
 			
+			// inform animstate
+			if (animState != null) {
+				animState.setMoveSpeed(vel.length());
+			}
+			
 			// rotate based on shit
 			if (Vector3.dot(vel, vel) > Vector3.EPSILON) {
 				// set target Rotation
@@ -97,8 +106,11 @@ public class MActorState extends BaseModel {
 			}
 		} else if (state == STATE_SLIDE_TO_STOP) {
 			// half our speed to the stopping point
-			vel.x *= 0.85f;
-			vel.z *= 0.85f;
+			vel.x *= 0.875f;
+			vel.z *= 0.875f;
+			// tell
+			if (animState != null)
+				animState.setMoveSpeed(vel.length());
 			// if we're too slow, idling
 			if (Vector3.dot(vel, vel) < 0.01f * maxVel * maxVel) {
 //				state = STATE_IDLE;
@@ -115,6 +127,10 @@ public class MActorState extends BaseModel {
 		Quaternion.slerp(rot, targetRot, rotSpeed * dt, rot);
 		
 		System.out.println("State: " + state);
+		
+		// update animation state
+		if (animState != null) 
+			animState.update(dt);
 	}
 	
 	public Matrix4 getRenderMatrix(float dt) {
@@ -133,11 +149,6 @@ public class MActorState extends BaseModel {
 	// here be states though
 	public void debugDraw(GL2 gl, float dt) {
 		float halfw = width * 0.5f;
-		// next, we draw it!!
-		Matrix4 mat = getRenderMatrix(dt);
-		
-		gl.glPushMatrix();
-		gl.glMultMatrixf(mat.m, 0);
 		
 		gl.glBegin(GL2.GL_LINE_LOOP);
 			gl.glColor3f(1, 1, 0);
@@ -181,8 +192,6 @@ public class MActorState extends BaseModel {
 			gl.glColor3f(0, 1, 0);
 			gl.glVertex3f(-halfw, height, -halfw);
 		gl.glEnd();
-		
-		gl.glPopMatrix();
 	}
 
 	public Vector3 getTargetVel() {
@@ -199,5 +208,13 @@ public class MActorState extends BaseModel {
 
 	public void setMaxVel(float maxVel) {
 		this.maxVel = maxVel;
+	}
+
+	public AnimStateManager getAnimState() {
+		return animState;
+	}
+
+	public void setAnimState(AnimStateManager animState) {
+		this.animState = animState;
 	}
 }

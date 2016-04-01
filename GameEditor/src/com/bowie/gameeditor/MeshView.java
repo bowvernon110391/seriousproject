@@ -91,11 +91,39 @@ public class MeshView extends Screen {
 		SkAnimLoader animLoader = new SkAnimLoader();
 		MeshLoader meshLoader = new MeshLoader();
 		
+		Skeleton skel = skelLoader.loadSkeleton("D:\\projects\\data\\man.skel");
+		SkAnim skAnim = animLoader.loadSkAnim("D:\\projects\\data\\man.skanim");
+		Mesh mesh = meshLoader.loadMesh("D:\\projects\\data\\man.mesh");
+		mesh.buildBufferObjects(parent.getContext());
+		
+		// grab texture list
+		TextureList manTex = new TextureList(mesh);
+		// init
+		for (int i=0; i<manTex.textures.length; i++) {
+			String groupName = mesh.getGroup(i).name;
+//			Texture2D tex = null;
+			System.out.println("grp: " + groupName);
+			if (groupName.equals("mat_eye"))
+				manTex.textures[i] = new Texture2D("D:\\projects\\data\\tex_eye.png", true);
+			if (groupName.equals("mat_foot"))
+				manTex.textures[i] = new Texture2D("D:\\projects\\data\\tex_foot.png", true);
+			if (groupName.equals("mat_head"))
+				manTex.textures[i] = new Texture2D("D:\\projects\\data\\tex_head.png", true);
+			if (groupName.equals("mat_body"))
+				manTex.textures[i] = new Texture2D("D:\\projects\\data\\tex_body.png", true);
+			if (groupName.equals("mat_hand"))
+				manTex.textures[i] = new Texture2D("D:\\projects\\data\\tex_hand.png", true);
+		}
+		
+		skel.attachAnimationData(skAnim);
+		
 		world = new GameWorld();
 		
 		// add our actor
 		MActorState o_model = new MActorState();
-		VDebugPhysics o_view = new VDebugPhysics(o_model);
+		AnimStateManager as = new AnimStateManager(skel);
+		o_model.setAnimState(as);
+		VDebugPhysics o_view = new VDebugPhysics(o_model, mesh, manTex);
 		GameObject o = new GameObject(null, o_model, o_view);
 		
 		world.addObject(o);
@@ -103,17 +131,21 @@ public class MeshView extends Screen {
 		// add tracking camera
 		cam = new MThirdPersonCamera(o);		
 		cam.setFov(60.0f);
+		cam.setZoomPerPixel(0.5f);
+		cam.setLookAtOffset(new Vector3(0, 1.5f, 0));
+		cam.setTargetZoomDist(1.5f);
+		cam.setTargetYRot((float) Math.toRadians(45.0f));
 		camControl = new CThirdPersonCamera(cam);
 		world.addObject(new GameObject(camControl, cam, null));
 		
 		player = new CActorController(cam, o);
 		world.addObject(new GameObject(player, null, null));
 		
-		Texture2D tex = new Texture2D("D:\\projects\\data\\grass.png", true);
+		Texture2D tex = new Texture2D("D:\\projects\\data\\ground.jpg", true);
 		GL2 gl = parent.getContext();
 		tex.getTexture().setTexParameterf(gl, GL2.GL_TEXTURE_WRAP_S, GL2.GL_REPEAT);
 		tex.getTexture().setTexParameterf(gl, GL2.GL_TEXTURE_WRAP_T, GL2.GL_REPEAT);
-		world.setWorldData(null, new VLargeGrid(40.0f, 30.0f, tex));
+		world.setWorldData(null, new VLargeGrid(40.0f, 8.0f, tex));
 	}
 	
 	@Override

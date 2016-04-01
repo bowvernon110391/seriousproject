@@ -81,6 +81,15 @@ public class SkPose {
 		return refData != null;
 	}
 	
+	public void setTo(SkPose ref) {
+		if (ref.skinHead.length == skinHead.length) {
+			for (int i=0; i<ref.skinHead.length; i++) {
+				skinHead[i].setTo(ref.skinHead[i]);
+				skinRot[i].setTo(ref.skinRot[i]);
+			}
+		}
+	}
+	
 	public void CPUSkin(GL2 gl, Mesh m) {
 		// will CPU Skin to mesh's temp vbuffer
 		if (m == null)
@@ -155,6 +164,10 @@ public class SkPose {
 		// rebuffer data
 		gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, m.tmpVBO);
 		gl.glBufferData(GL2.GL_ARRAY_BUFFER, m.vertices.length * 12, fb, GL2.GL_STATIC_DRAW);
+	}
+	
+	public void calculatePhaseLinear(int actionId, float phase) {
+		// simply convert phase to time
 	}
 	
 	/**

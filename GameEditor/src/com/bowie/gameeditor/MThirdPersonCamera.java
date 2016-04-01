@@ -275,4 +275,12 @@ public class MThirdPersonCamera extends BaseModel {
 	public void setZoomDist(float zoomDist) {
 		this.zoomDist = zoomDist;
 	}
+
+	public Vector3 getLookAtOffset() {
+		return lookAtOffset;
+	}
+
+	public void setLookAtOffset(Vector3 lookAtOffset) {
+		this.lookAtOffset = lookAtOffset;
+	}
 }

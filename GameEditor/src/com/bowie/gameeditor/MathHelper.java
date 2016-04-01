@@ -40,4 +40,31 @@ public class MathHelper {
 		
 		return Quaternion.makeAxisRot(axis, angle);
 	}
+	
+	/**
+	 * this wrap values to be between 0..1
+	 * @param v
+	 * @return value between 0..1
+	 */
+	public static float wrapFloat01(float v) {
+		
+		return (float) (v - Math.floor(v));
+	}
+	
+	/**
+	 * This converts phase [0..1] to appropriate frame time
+	 * @param phase value
+	 * @param trackTime [min..max] of frametime
+	 * @return correct frametime
+	 */
+	public static float phaseToRenderTime(float phase, float [] trackTime) {
+		if (trackTime.length >= 2) {
+			return trackTime[0] * (1.0f-phase) + trackTime[1] * phase;
+		}
+		return 1.0f;
+	}
+	
+	public static float clamp(float v, float min, float max) {
+		return v < min ? min : v > max ? max : v;
+	}
 }

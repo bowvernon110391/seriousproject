@@ -48,6 +48,13 @@ public class Quaternion {
 		w=1;
 	}
 	
+	public void setTo(Quaternion q) {
+		x = q.x;
+		y = q.y;
+		z = q.z;
+		w = q.w;
+	}
+	
 	public float length() {
 		return (float) Math.sqrt(x*x + y*y + z*z + w*w);
 	}

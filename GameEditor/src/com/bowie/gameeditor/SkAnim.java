@@ -53,6 +53,13 @@ public class SkAnim {
 		public String name = "";
 		List<Keyframe> keyframes = new ArrayList<>();
 		
+		public float getFrameCount() {
+			float [] frameId = {0,0};
+			this.getTrackTime(frameId);
+			
+			return (frameId[1] - frameId[0])+1;
+		}
+		
 		// get min and max time for this action
 		public void getTrackTime(float [] trackTime) {
 			if (trackTime.length < 2 || keyframes.size() == 0)
@@ -77,7 +84,7 @@ public class SkAnim {
 				Keyframe ka = keyframes.get(i);
 				Keyframe kb = keyframes.get(i+1);
 				// check time. one of them must be set inclusive
-				if (ka.time < time && kb.time >= time) {
+				if (ka.time <= time && kb.time >= time) {
 					// this is it
 					kf[0] = ka;
 					kf[1] = kb;
@@ -104,7 +111,7 @@ public class SkAnim {
 				Keyframe kb = keyframes.get(i+1);
 				
 				// check time. one of them must be set inclusive
-				if (ka.time < time && kb.time >= time) {
+				if (ka.time <= time && kb.time >= time) {
 					// this is it
 					kf[0] = ka;
 					kf[1] = kb;

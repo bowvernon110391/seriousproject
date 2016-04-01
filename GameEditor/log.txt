@@ -1,3 +1,4 @@
 Editor spawned!
 editor attached to canvas panel
+Hidden
 Well we're finished
