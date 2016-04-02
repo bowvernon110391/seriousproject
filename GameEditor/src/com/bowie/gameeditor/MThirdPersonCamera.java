@@ -283,4 +283,12 @@ public class MThirdPersonCamera extends BaseModel {
 	public void setLookAtOffset(Vector3 lookAtOffset) {
 		this.lookAtOffset = lookAtOffset;
 	}
+
+	public float getElasticity() {
+		return elasticity;
+	}
+
+	public void setElasticity(float elasticity) {
+		this.elasticity = elasticity;
+	}
 }

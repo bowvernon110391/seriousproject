@@ -6,10 +6,10 @@ public class CActorController extends BaseController {
 	private MThirdPersonCamera cam;
 	private MActorState actorState;
 	
-	private int keyUp = KeyEvent.VK_UP;
-	private int keyDown = KeyEvent.VK_DOWN;
-	private int keyLeft = KeyEvent.VK_LEFT;
-	private int keyRight = KeyEvent.VK_RIGHT;
+	private int keyUp = KeyEvent.VK_W;
+	private int keyDown = KeyEvent.VK_S;
+	private int keyLeft = KeyEvent.VK_A;
+	private int keyRight = KeyEvent.VK_D;
 	private int keyRun = KeyEvent.VK_SHIFT;
 	
 	private int [] yMov = {0, 0};
@@ -35,7 +35,10 @@ public class CActorController extends BaseController {
 		if (cam != null && actorState != null) {
 			Vector3 right = cam.getRightVector();
 			Vector3 front = cam.getFrontVector();
-			float targetSpeed = actorState.getMaxVel() * (sprint+1) * 0.5f;
+			float targetSpeed = actorState.getMaxVel() * 0.25f;	// walkSpeed
+			if (sprint > 0) {
+				targetSpeed = actorState.getMaxVel();
+			}
 			
 			Vector3 targetVel = new Vector3();
 			

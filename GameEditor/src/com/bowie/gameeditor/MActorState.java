@@ -16,20 +16,20 @@ public class MActorState extends BaseModel {
 	public final int STATE_SLIDE_TO_STOP = 2;
 	
 	// some global shared data
-	public float slideSpeedThreshold = 5.0f;
+	public float slideSpeedThreshold = 4.0f;
 	
 	// physics data
 	public Vector3 pos = new Vector3();
 	public Vector3 vel = new Vector3();
 	public Vector3 targetVel = new Vector3();
 	public float accel = 20.0f;
-	public float maxVel = 10.0f;	// standard
+	public float maxVel = 8.0f;	// standard
 	
 	public float width = 0.6f;		
 	public float height = 1.85f;
 	public Quaternion rot = new Quaternion();	// to hold rotation data
 	public Quaternion targetRot = new Quaternion();	// where should I look
-	public float rotSpeed = 10.0f;			// how quick do we turn?
+	public float rotSpeed = 5.0f;			// how quick do we turn?
 	
 	// must be replaced by state machine!!
 	public int state = STATE_IDLE;
@@ -126,7 +126,7 @@ public class MActorState extends BaseModel {
 		// same with rotation
 		Quaternion.slerp(rot, targetRot, rotSpeed * dt, rot);
 		
-		System.out.println("State: " + state);
+//		System.out.println("State: " + state);
 		
 		// update animation state
 		if (animState != null) 

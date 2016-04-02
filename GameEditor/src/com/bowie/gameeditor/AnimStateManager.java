@@ -233,7 +233,7 @@ public class AnimStateManager {
 		
 		public SlideAnimState(int id, String actionName, float slideStartSpeed, float slideEndSpeed) {
 			this.id = id;
-			this.enterSpeed = 20.0f;
+			this.enterSpeed = 10.0f;
 			this.slideStartSpeed = slideStartSpeed;
 			this.slideEndSpeed = slideEndSpeed;
 			this.actionName = actionName;
@@ -301,7 +301,7 @@ public class AnimStateManager {
 		states.add(new LoopAnimState(ANIMSTATE_IDLE, 2.0f, "idle"));
 		
 		// the move state
-		states.add(new LocAnimState(ANIMSTATE_MOVING, "stand", "walk", "run", 1.5f, 4.5f));
+		states.add(new LocAnimState(ANIMSTATE_MOVING, "stand", "walk", "run", 1.25f, 4.5f));
 		
 		// the slide
 		states.add(new SlideAnimState(ANIMSTATE_SLIDE_TO_STOP, "slide2stop", 5.0f, 0.0f));
@@ -346,14 +346,14 @@ public class AnimStateManager {
 			nextState = null;
 		}
 		
-		int cs = -1;
+		/*int cs = -1;
 		int ns = -1;
 		
 		if (curState != null)
 			cs = curState.id;
 		if (nextState != null)
 			ns = nextState.id;
-		System.out.println("AnimState: " + cs + " ~ " + ns + " @ " + interpolation);
+		System.out.println("AnimState: " + cs + " ~ " + ns + " @ " + interpolation);*/
 	}
 	
 	public void changeTo(int state) {
@@ -396,10 +396,12 @@ public class AnimStateManager {
 	}
 	
 	public void preRender(float dt) {
+		// interpolate to render time
 		r_interpolation = interpolation + interpSpeed * dt;
 		// clamp
 		r_interpolation = r_interpolation < 0 ? 0 : r_interpolation > 1 ? 1 : r_interpolation;
-		// pre render both states
+		// pre render both states (update to render time)
+		// and generate render pose
 		if (curState != null)
 			curState.preRender(dt);
 		if (nextState != null)
@@ -414,7 +416,7 @@ public class AnimStateManager {
 			SkPose.blendPose(curState.getRenderPose(), nextState.getRenderPose(), r_interpolation, finalPose);
 		}
 	}
-	
+
 	// state machine data
 	protected AnimState curState = null;
 	protected AnimState nextState = null;

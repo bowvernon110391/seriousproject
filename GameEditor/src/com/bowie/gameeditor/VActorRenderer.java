@@ -3,12 +3,12 @@ package com.bowie.gameeditor;
 import com.bowie.gameeditor.Mesh.MeshGroup;
 import com.jogamp.opengl.GL2;
 
-public class VDebugPhysics extends BaseView {
+public class VActorRenderer extends BaseView {
 	private MActorState ref;
 	private Mesh mesh;
 	private TextureList texture;
 	
-	public VDebugPhysics(MActorState refData, Mesh m, TextureList t) {
+	public VActorRenderer(MActorState refData, Mesh m, TextureList t) {
 		ref = refData;
 		mesh = m;
 		texture = t;
@@ -29,7 +29,7 @@ public class VDebugPhysics extends BaseView {
 		gl.glPushMatrix();
 			gl.glMultMatrixf(mat.m, 0);
 			
-			ref.debugDraw(gl, dt);
+//			ref.debugDraw(gl, dt);
 			
 			if (mesh != null) {
 				// if has material, bind

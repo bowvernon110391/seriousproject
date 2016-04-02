@@ -104,15 +104,15 @@ public class MeshView extends Screen {
 //			Texture2D tex = null;
 			System.out.println("grp: " + groupName);
 			if (groupName.equals("mat_eye"))
-				manTex.textures[i] = new Texture2D("D:\\projects\\data\\tex_eye.png", true);
+				manTex.textures[i] = new Texture2D("D:\\projects\\data\\tex_eye.png", false);
 			if (groupName.equals("mat_foot"))
-				manTex.textures[i] = new Texture2D("D:\\projects\\data\\tex_foot.png", true);
+				manTex.textures[i] = new Texture2D("D:\\projects\\data\\tex_foot.png", false);
 			if (groupName.equals("mat_head"))
-				manTex.textures[i] = new Texture2D("D:\\projects\\data\\tex_head.png", true);
+				manTex.textures[i] = new Texture2D("D:\\projects\\data\\tex_head.png", false);
 			if (groupName.equals("mat_body"))
-				manTex.textures[i] = new Texture2D("D:\\projects\\data\\tex_body.png", true);
+				manTex.textures[i] = new Texture2D("D:\\projects\\data\\tex_body.png", false);
 			if (groupName.equals("mat_hand"))
-				manTex.textures[i] = new Texture2D("D:\\projects\\data\\tex_hand.png", true);
+				manTex.textures[i] = new Texture2D("D:\\projects\\data\\tex_hand.png", false);
 		}
 		
 		skel.attachAnimationData(skAnim);
@@ -123,18 +123,19 @@ public class MeshView extends Screen {
 		MActorState o_model = new MActorState();
 		AnimStateManager as = new AnimStateManager(skel);
 		o_model.setAnimState(as);
-		VDebugPhysics o_view = new VDebugPhysics(o_model, mesh, manTex);
+		VActorRenderer o_view = new VActorRenderer(o_model, mesh, manTex);
 		GameObject o = new GameObject(null, o_model, o_view);
 		
 		world.addObject(o);
 		
 		// add tracking camera
 		cam = new MThirdPersonCamera(o);		
-		cam.setFov(60.0f);
+		cam.setFov(90.0f);
 		cam.setZoomPerPixel(0.5f);
 		cam.setLookAtOffset(new Vector3(0, 1.5f, 0));
 		cam.setTargetZoomDist(1.5f);
 		cam.setTargetYRot((float) Math.toRadians(45.0f));
+		cam.setElasticity(12.0f);
 		camControl = new CThirdPersonCamera(cam);
 		world.addObject(new GameObject(camControl, cam, null));
 		
