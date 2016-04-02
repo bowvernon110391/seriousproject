@@ -111,8 +111,8 @@ public class SkPose {
 		// clear
 		fb.clear();
 		
-		Vector3 tmpV = new Vector3();	// for temporary calculation
-		Vector3 vl = new Vector3();
+		Vector3 tmpV = Vector3.tmp0;	// for temporary calculation
+		Vector3 vl = Vector3.tmp1;
 		
 		
 		int boneId = 0;
@@ -287,10 +287,14 @@ public class SkPose {
 		
 		// do the thing
 		// do the thing
-		Vector3 vTmp = new Vector3();
-		Vector3 vUp = new Vector3(0,1,0);
+		Vector3 vTmp = Vector3.tmp0;
+		Vector3 vUp = Vector3.tmp1;
+		vUp.x = 0;
+		vUp.z = 0;
+		vUp.y = 1;
+		
 		Quaternion qTmp;
-		Vector3 vRotAxis = new Vector3();
+		Vector3 vRotAxis = Vector3.tmp2;
 		for (int i=0; i<rot.length; i++) {
 			PoseBone pa = a.pbones.get(i);
 			PoseBone pb = b.pbones.get(i);

@@ -10,7 +10,7 @@ public class CActorController extends BaseController {
 	private int keyDown = KeyEvent.VK_S;
 	private int keyLeft = KeyEvent.VK_A;
 	private int keyRight = KeyEvent.VK_D;
-	private int keyRun = KeyEvent.VK_SHIFT;
+	private int keyRun = KeyEvent.VK_SPACE;
 	
 	private int [] yMov = {0, 0};
 	private int [] xMov = {0, 0};

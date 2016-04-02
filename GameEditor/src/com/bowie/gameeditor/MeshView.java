@@ -102,7 +102,7 @@ public class MeshView extends Screen {
 		for (int i=0; i<manTex.textures.length; i++) {
 			String groupName = mesh.getGroup(i).name;
 //			Texture2D tex = null;
-			System.out.println("grp: " + groupName);
+//			System.out.println("grp: " + groupName);
 			if (groupName.equals("mat_eye"))
 				manTex.textures[i] = new Texture2D("D:\\projects\\data\\tex_eye.png", false);
 			if (groupName.equals("mat_foot"))

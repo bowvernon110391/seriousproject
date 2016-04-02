@@ -16,7 +16,7 @@ public class MActorState extends BaseModel {
 	public final int STATE_SLIDE_TO_STOP = 2;
 	
 	// some global shared data
-	public float slideSpeedThreshold = 4.0f;
+	public float slideSpeedThreshold = 5.0f;
 	
 	// physics data
 	public Vector3 pos = new Vector3();
@@ -59,7 +59,7 @@ public class MActorState extends BaseModel {
 				this.setState(STATE_MOVING);
 		} else if (state == STATE_MOVING) {
 			// move velocity to target as close as possible
-			Vector3 targetDiff = new Vector3();
+			Vector3 targetDiff = Vector3.tmp0;
 			Vector3.sub(targetVel, vel, targetDiff);
 			
 			// cap to max acceleration
@@ -85,7 +85,11 @@ public class MActorState extends BaseModel {
 			// rotate based on shit
 			if (Vector3.dot(vel, vel) > Vector3.EPSILON) {
 				// set target Rotation
-				targetRot = Quaternion.makeAxisRot(new Vector3(0, 1, 0), (float) Math.atan2(vel.x, vel.z));
+				Vector3 rotAxis = Vector3.tmp1;
+				rotAxis.x = 0;
+				rotAxis.z = 0;
+				rotAxis.y = 1;
+				targetRot = Quaternion.makeAxisRot(rotAxis, (float) Math.atan2(vel.x, vel.z));
 			}
 			
 			// wait are we stopping?
@@ -105,9 +109,6 @@ public class MActorState extends BaseModel {
 				}
 			}
 		} else if (state == STATE_SLIDE_TO_STOP) {
-			// half our speed to the stopping point
-			vel.x *= 0.875f;
-			vel.z *= 0.875f;
 			// tell
 			if (animState != null)
 				animState.setMoveSpeed(vel.length());
@@ -116,6 +117,9 @@ public class MActorState extends BaseModel {
 //				state = STATE_IDLE;
 				this.setState(STATE_IDLE);
 			}
+			// half our speed to the stopping point
+			vel.x *= 0.875f;
+			vel.z *= 0.875f;
 		}
 		
 		// position needs updating never the less
@@ -133,17 +137,17 @@ public class MActorState extends BaseModel {
 			animState.update(dt);
 	}
 	
-	public Matrix4 getRenderMatrix(float dt) {
+	public void calculateRenderMatrix(float dt, Matrix4 res) {
 		// calculate our render matrix and render
-		Vector3 newPos = new Vector3();
+		Vector3 newPos = Vector3.tmp0;
 		newPos.x = pos.x + vel.x * dt;
 		newPos.y = pos.y + vel.y * dt;
 		newPos.z = pos.z + vel.z * dt;
 		
-		Quaternion newRot = new Quaternion();
+		Quaternion newRot = Quaternion.tmp0;
 		Quaternion.slerp(rot, targetRot, rotSpeed * dt, newRot);
 		
-		return new Matrix4(newRot, newPos);
+		res.fromQuatVec3(newRot, newPos);
 	}
 	
 	// here be states though

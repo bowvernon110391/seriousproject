@@ -1,6 +1,8 @@
 package com.bowie.gameeditor;
 
 public class Matrix3 {
+	public static Matrix3 tmp0 = new Matrix3();
+	public static Matrix3 tmp1 = new Matrix3();
 	
 	public float [] m = new float[9];
 	

@@ -28,6 +28,8 @@ public class AnimStateManager {
 		public SkPose getRenderPose() {
 			return null;
 		}
+		public void onEnter() {}
+		public void onExit() {}
 	}
 	
 	// Idle state
@@ -104,6 +106,7 @@ public class AnimStateManager {
 		
 		public float moveSpeed = 0;
 		public float interp = 0;
+		public float lastInterp = 0;
 		
 		public static final int STAND_TO_WALK = 0;
 		public static final int WALK_TO_RUN = 1;
@@ -136,7 +139,13 @@ public class AnimStateManager {
 		}
 		
 		@Override
+		public void onExit() {
+			this.moveSpeed = 0;	// reset movement speed
+		}
+		
+		@Override
 		public void update(float dt) {
+			lastInterp = interp;
 			// calculate phase speed
 			if (moveSpeed <= walkSpeed) {
 				// stand <-> walk
@@ -164,25 +173,38 @@ public class AnimStateManager {
 		
 		@Override
 		public void preRender(float dt) {
+			// calculate renderphase
 			this.renderPhase = this.phase + this.phaseSpeed * dt;
 			this.renderPhase = MathHelper.wrapFloat01(renderPhase);
+			
+			// calculate render interpolation value (smoothing)
+			float r_interp = interp + (interp - lastInterp) * dt;
+			r_interp = MathHelper.clamp(r_interp, 0, 1);
 			
 			// depending on what states of animation we are
 			if (status == STAND_TO_WALK) {
 				poseFrom.calculateCubic(standId, MathHelper.phaseToRenderTime(renderPhase, standTrackTime));
 				poseTo.calculateCubic(walkId, MathHelper.phaseToRenderTime(renderPhase, walkTrackTime));
 				
+//				poseFrom.calculateLinear(standId, MathHelper.phaseToRenderTime(renderPhase, standTrackTime));
+//				poseTo.calculateLinear(walkId, MathHelper.phaseToRenderTime(renderPhase, walkTrackTime));
+				
 				// blend em
-				SkPose.blendPose(poseFrom, poseTo, interp, renderPose);
+				SkPose.blendPose(poseFrom, poseTo, r_interp, renderPose);
 			} else if (status == WALK_TO_RUN) {
 				poseFrom.calculateCubic(walkId, MathHelper.phaseToRenderTime(renderPhase, walkTrackTime));
 				poseTo.calculateCubic(runId, MathHelper.phaseToRenderTime(renderPhase, runTrackTime));
 				
+//				poseFrom.calculateLinear(walkId, MathHelper.phaseToRenderTime(renderPhase, walkTrackTime));
+//				poseTo.calculateLinear(runId, MathHelper.phaseToRenderTime(renderPhase, runTrackTime));
+				
 				// blend em
-				SkPose.blendPose(poseFrom, poseTo, interp, renderPose);
+				SkPose.blendPose(poseFrom, poseTo, r_interp, renderPose);
 			} else {
 				// mmust be run faster
 				renderPose.calculateCubic(runId, MathHelper.phaseToRenderTime(renderPhase, runTrackTime));
+				
+//				renderPose.calculateLinear(runId, MathHelper.phaseToRenderTime(renderPhase, runTrackTime));
 			}
 		}
 		
@@ -267,6 +289,9 @@ public class AnimStateManager {
 			renderPhase = phase + (phase-lastPhase) * dt;
 			renderPhase = renderPhase < 0 ? 0 : renderPhase > 1 ? 1 : renderPhase;
 			
+			// calculate cosine interpolation value
+			renderPhase = MathHelper.cosineInterpolation(0, 1, renderPhase);
+			
 			// now do it
 			renderPose.calculateLinear(actionId, MathHelper.phaseToRenderTime(renderPhase, trackTime));
 		}
@@ -301,7 +326,7 @@ public class AnimStateManager {
 		states.add(new LoopAnimState(ANIMSTATE_IDLE, 2.0f, "idle"));
 		
 		// the move state
-		states.add(new LocAnimState(ANIMSTATE_MOVING, "stand", "walk", "run", 1.25f, 4.5f));
+		states.add(new LocAnimState(ANIMSTATE_MOVING, "stand", "walk", "run", 1.5f, 5.0f));
 		
 		// the slide
 		states.add(new SlideAnimState(ANIMSTATE_SLIDE_TO_STOP, "slide2stop", 5.0f, 0.0f));
@@ -335,6 +360,13 @@ public class AnimStateManager {
 		// are we moving to next, or what?
 		if (interpolation >= 1.0f) {
 			// we have arrived to next state
+			// current state exiting
+			if (curState != null)
+				curState.onExit();
+			// next state entering
+			if (nextState != null)
+				nextState.onEnter();
+			// replace current state with next state
 			curState = nextState;
 			nextState = null;
 			interpSpeed = 0;
@@ -343,7 +375,12 @@ public class AnimStateManager {
 			// we have to move to starting state
 			interpSpeed = 0;
 			interpolation = 0;
+			
+			// next state is out of simulation
+			if (nextState != null)
+				nextState.onExit();
 			nextState = null;
+			
 		}
 		
 		/*int cs = -1;
@@ -374,6 +411,8 @@ public class AnimStateManager {
 			} else {
 				// new state
 				nextState = next;
+				// entering next state
+				nextState.onEnter();
 				interpSpeed = next.enterSpeed;
 			}
 		}

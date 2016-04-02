@@ -7,11 +7,13 @@ public class VActorRenderer extends BaseView {
 	private MActorState ref;
 	private Mesh mesh;
 	private TextureList texture;
+	private Matrix4 renderMatrix;
 	
 	public VActorRenderer(MActorState refData, Mesh m, TextureList t) {
 		ref = refData;
 		mesh = m;
 		texture = t;
+		renderMatrix = new Matrix4();
 	}
 	
 	@Override
@@ -19,17 +21,17 @@ public class VActorRenderer extends BaseView {
 		AnimStateManager animState = ref.getAnimState();
 		if (animState != null)
 			animState.preRender(dt);
+		// grab render matrix from actor physics data
+		ref.calculateRenderMatrix(dt, renderMatrix);
 	}
 	
 	// here we simply draw shit
 	@Override
-	public void render(GL2 gl, float dt) {
-		Matrix4 mat = ref.getRenderMatrix(dt);
-		
+	public void render(GL2 gl, float dt) {		
 		gl.glPushMatrix();
-			gl.glMultMatrixf(mat.m, 0);
+			gl.glMultMatrixf(renderMatrix.m, 0);
 			
-//			ref.debugDraw(gl, dt);
+			ref.debugDraw(gl, dt);
 			
 			if (mesh != null) {
 				// if has material, bind

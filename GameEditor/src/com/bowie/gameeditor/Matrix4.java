@@ -6,6 +6,9 @@
 package com.bowie.gameeditor;
 
 public class Matrix4 {
+	public static Matrix4 tmp0 = new Matrix4();
+	public static Matrix4 tmp1 = new Matrix4();
+	
 	public float [] m = new float[16];
 	
 	private static Matrix3 tmpMat0 = new Matrix3();

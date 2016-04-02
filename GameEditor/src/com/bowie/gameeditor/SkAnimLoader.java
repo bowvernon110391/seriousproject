@@ -34,7 +34,7 @@ public class SkAnimLoader {
 			return null;
 		}
 		
-		System.out.println("SkAnim: reading bytes: " + b.length);
+//		System.out.println("SkAnim: reading bytes: " + b.length);
 		
 		// okay, wrap em. file is Littel endian btw
 		ByteBuffer bb = ByteBuffer.wrap(b).order(ByteOrder.LITTLE_ENDIAN);
@@ -42,7 +42,7 @@ public class SkAnimLoader {
 		int version = bb.get();
 		int bone_per_kf = bb.get();
 		
-		System.out.println("SkAnim: version: " + version + " bones per kf: " + bone_per_kf);
+//		System.out.println("SkAnim: version: " + version + " bones per kf: " + bone_per_kf);
 		
 		// check version
 		if (version != 1) {
@@ -59,7 +59,7 @@ public class SkAnimLoader {
 		// next, number of action
 		short num_action = bb.getShort();
 		
-		System.out.println("SkAnim: action count: " + num_action);
+//		System.out.println("SkAnim: action count: " + num_action);
 		// check
 		if (num_action == 0) {
 			System.out.println("SkAnim: no action!!");
@@ -82,12 +82,12 @@ public class SkAnimLoader {
 			// store name
 			ac_data.name = new String(tmpBuf, Charset.forName("UTF-8")).trim();
 			
-			System.out.println("SkAnim: reading action: " + ac_data.name);
+//			System.out.println("SkAnim: reading action: " + ac_data.name);
 			
 			// read num keyframe for this action
 			short num_kf = bb.getShort();
 			
-			System.out.println("SkAnim: keyframe count for this action: " + num_kf);
+//			System.out.println("SkAnim: keyframe count for this action: " + num_kf);
 			
 			// for each keyframe
 			for (int j=0; j<num_kf; j++) {
@@ -97,7 +97,7 @@ public class SkAnimLoader {
 				// read time
 				kf_data.time = bb.getFloat();
 				
-				System.out.println("\tkf_t[" + j + "]: " + kf_data.time);
+//				System.out.println("\tkf_t[" + j + "]: " + kf_data.time);
 				// now read pose bones
 				// for each pose bone
 				for (int k=0; k<bone_per_kf; k++) {
@@ -120,8 +120,8 @@ public class SkAnimLoader {
 					pb.rot.z = bb.getFloat();
 					pb.rot.w = bb.getFloat();
 					
-					System.out.println("\t\t" + pb.bone_id + " : " + pb.head.x + ", " + pb.head.y + ", " + pb.head.z+ ","+
-							pb.tail.x + ", " + pb.tail.y + ", " + pb.tail.z + ", " + pb.rot.x + ", " + pb.rot.y + "," + pb.rot.w);
+//					System.out.println("\t\t" + pb.bone_id + " : " + pb.head.x + ", " + pb.head.y + ", " + pb.head.z+ ","+
+//							pb.tail.x + ", " + pb.tail.y + ", " + pb.tail.z + ", " + pb.rot.x + ", " + pb.rot.y + "," + pb.rot.w);
 					
 					// add pose bone to keyframe
 					// it will automatically follow the index

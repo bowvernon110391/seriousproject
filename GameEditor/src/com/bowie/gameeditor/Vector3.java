@@ -2,6 +2,10 @@ package com.bowie.gameeditor;
 
 public class Vector3 {
 	public static float EPSILON = 0.00001f;
+	public static Vector3 tmp0 = new Vector3();
+	public static Vector3 tmp1 = new Vector3();
+	public static Vector3 tmp2 = new Vector3();
+	public static Vector3 tmp3 = new Vector3();
 
 	public float x,y,z;
 	

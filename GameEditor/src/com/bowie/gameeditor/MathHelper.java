@@ -5,6 +5,17 @@ public class MathHelper {
 	public MathHelper() {
 	}
 	
+	public static float lerp(float a, float b, float mu) {
+		return (1.0f-mu) * a + mu * b;
+	}
+	
+	public static float cosineInterpolation(float a, float b, float mu) {
+		float mu2;
+
+		mu2 = (float) ((1 - Math.cos(mu * Math.PI)) / 2.0f);
+		return (a * (1 - mu2) + b * mu2);
+	}
+	
 	public static void calcSphereCoord(int x, int y, int [] screen, Vector3 res) {
 		float sphereRadius = Math.min(screen[2], screen[3]);
 		float vX = (float) (x-screen[0]) / (float) screen[2];

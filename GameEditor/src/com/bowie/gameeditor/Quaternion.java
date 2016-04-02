@@ -1,6 +1,11 @@
 package com.bowie.gameeditor;
 
 public class Quaternion {
+	
+	public static Quaternion tmp0 = new Quaternion();
+	public static Quaternion tmp1 = new Quaternion();
+	public static Quaternion tmp2 = new Quaternion();
+	public static Quaternion tmp3 = new Quaternion();
 
 	public float x,y,z,w;
 	

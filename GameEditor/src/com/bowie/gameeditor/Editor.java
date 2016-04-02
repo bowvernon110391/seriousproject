@@ -34,10 +34,12 @@ public class Editor implements ScriptCmdListener {
 	//editor settings
 	//--playback and timer
 	private long timeLast = System.currentTimeMillis();
+	private long fpsTimer = 0;
+	private int fpsCount = 0;
 	private float timeElapsed = 0.0f;
 	
-	private int tickPerSec = 30;	//10 FPS update rate
-	private int renderPerSec = 60;	//60 FPS render rate
+	private int tickPerSec = 30;	//30 FPS update rate
+	private int renderPerSec = 60;	//50 FPS render rate
 	
 	//editor stat
 	private boolean isPlaying = true;
@@ -84,13 +86,13 @@ public class Editor implements ScriptCmdListener {
 //		GLProfile glp = GLProfile.getGL2ES2();
 		GLCapabilities glcap = new GLCapabilities(glp);
 		
-		glcap.setHardwareAccelerated(true);
-		glcap.setDepthBits(32);
+		/*glcap.setHardwareAccelerated(true);
+		glcap.setDepthBits(24);
 		glcap.setDoubleBuffered(true);
 		glcap.setRedBits(8);
 		glcap.setGreenBits(8);
 		glcap.setBlueBits(8);
-		glcap.setAlphaBits(8);
+		glcap.setAlphaBits(8);*/
 		
 //		canvas = new GLJPanel(glcap);
 		canvas = new GLCanvas();
@@ -117,8 +119,8 @@ public class Editor implements ScriptCmdListener {
 		});
 		
 		//also, start the fps animator
-		ticker = new FPSAnimator(renderPerSec);
-		ticker.add(canvas);
+		ticker = new FPSAnimator(canvas, renderPerSec, true);
+		ticker.start();
 	}
 	
 	public GL2 getContext() {
@@ -139,7 +141,7 @@ public class Editor implements ScriptCmdListener {
 			context = gl;
 		}		
 		//start animating
-		ticker.start();
+//		ticker.start();
 //		logger.log("editor initialized");
 		//set default screen to mesh
 		selectView(SCREEN_MESH_VIEW);
@@ -183,7 +185,9 @@ public class Editor implements ScriptCmdListener {
 	public void canvasDraw(GL2 gl) {
 		//update first
 		long timeCurrent = System.currentTimeMillis();
-		timeElapsed += (float)(timeCurrent-timeLast)/1000.0f;
+		long deltaTime = timeCurrent - timeLast;
+		fpsTimer += deltaTime;
+		timeElapsed += (float)deltaTime/1000.0f;
 		float tickDt = 1.0f/(float)tickPerSec;
 		timeLast = timeCurrent;
 		
@@ -198,8 +202,17 @@ public class Editor implements ScriptCmdListener {
 		}
 		
 		//draw
-		if (activeScreen >= 0)
+		if (activeScreen >= 0) {
 			views[activeScreen].onDraw(gl, timeElapsed);
+			fpsCount ++;
+		}
+		
+		// display fps
+		if (fpsTimer >= 1000) {
+			fpsTimer = 0; // reset
+			System.out.print("FPS: " + fpsCount + "\r");
+			fpsCount = 0;
+		}
 	}
 		
 	//this resize te canvas
