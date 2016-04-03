@@ -86,13 +86,13 @@ public class Editor implements ScriptCmdListener {
 //		GLProfile glp = GLProfile.getGL2ES2();
 		GLCapabilities glcap = new GLCapabilities(glp);
 		
-		/*glcap.setHardwareAccelerated(true);
+		glcap.setHardwareAccelerated(true);
 		glcap.setDepthBits(24);
 		glcap.setDoubleBuffered(true);
 		glcap.setRedBits(8);
 		glcap.setGreenBits(8);
 		glcap.setBlueBits(8);
-		glcap.setAlphaBits(8);*/
+		glcap.setAlphaBits(8);
 		
 //		canvas = new GLJPanel(glcap);
 		canvas = new GLCanvas();

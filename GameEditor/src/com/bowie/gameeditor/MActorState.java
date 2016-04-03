@@ -22,7 +22,7 @@ public class MActorState extends BaseModel {
 	public Vector3 pos = new Vector3();
 	public Vector3 vel = new Vector3();
 	public Vector3 targetVel = new Vector3();
-	public float accel = 20.0f;
+	public float accel = 7.0f;
 	public float maxVel = 8.0f;	// standard
 	
 	public float width = 0.6f;		
@@ -58,17 +58,20 @@ public class MActorState extends BaseModel {
 			if (Vector3.dot(targetVel, targetVel) > Vector3.EPSILON)
 				this.setState(STATE_MOVING);
 		} else if (state == STATE_MOVING) {
-			// move velocity to target as close as possible
+			// calculate difference between target and current velocity
 			Vector3 targetDiff = Vector3.tmp0;
 			Vector3.sub(targetVel, vel, targetDiff);
 			
-			// cap to max acceleration
-			float validAccel = Math.min(accel, targetDiff.length());
-			targetDiff.normalize();
-			targetDiff.scale(validAccel * dt);
+			Vector3 targetDir = Vector3.tmp1;
+			targetDir.setTo(targetDiff);
+			targetDir.normalize();
 			
-			// add em
-			Vector3.add(targetDiff, vel, vel);
+			float f_accel = Math.min(targetVel.length(), accel);
+			
+			targetDir.scale(accel * dt);
+			
+			// add to current velocity
+			Vector3.add(vel, targetDir, vel);
 			
 			// cap velocity
 			float vLen = vel.length();
@@ -89,7 +92,11 @@ public class MActorState extends BaseModel {
 				rotAxis.x = 0;
 				rotAxis.z = 0;
 				rotAxis.y = 1;
-				targetRot = Quaternion.makeAxisRot(rotAxis, (float) Math.atan2(vel.x, vel.z));
+				// calculate rotation from normalized velocity
+				Vector3 dir = Vector3.tmp0;
+				dir.setTo(vel);
+				dir.normalize();
+				targetRot = Quaternion.makeAxisRot(rotAxis, (float) Math.atan2(dir.x, dir.z));
 			}
 			
 			// wait are we stopping?
@@ -127,9 +134,15 @@ public class MActorState extends BaseModel {
 		pos.y += vel.y * dt;
 		pos.z += vel.z * dt;
 		
-		// same with rotation
-		Quaternion.slerp(rot, targetRot, rotSpeed * dt, rot);
+//		// see how much it differs
+//		Vector3 dir = Vector3.tmp0;
+//		dir.setTo(vel);
+//		dir.normalize();
+//		System.out.println("vel: " + String.format("%f %f %f", dir.x, dir.y, dir.z) );
 		
+		// same with rotation
+		Quaternion.slerp(rot, targetRot, Math.min(1, rotSpeed * dt), rot);
+		rot.normalize();
 //		System.out.println("State: " + state);
 		
 		// update animation state
@@ -145,7 +158,8 @@ public class MActorState extends BaseModel {
 		newPos.z = pos.z + vel.z * dt;
 		
 		Quaternion newRot = Quaternion.tmp0;
-		Quaternion.slerp(rot, targetRot, rotSpeed * dt, newRot);
+		Quaternion.slerp(rot, targetRot, Math.min(1, rotSpeed * dt), newRot);
+		newRot.normalize();
 		
 		res.fromQuatVec3(newRot, newPos);
 	}

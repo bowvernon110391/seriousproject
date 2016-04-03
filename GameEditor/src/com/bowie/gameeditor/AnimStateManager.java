@@ -100,6 +100,14 @@ public class AnimStateManager {
 		public float phaseSpeed = 0;	// will change depending on speed
 		public float renderPhase = 0;
 		
+		// generalized format
+		public int [] actionIds;
+		public String [] actionNames;
+		public float [] actionTargetSpeeds;
+		public float [][] trackTimes;
+		public float [] phaseSpeeds;
+		public int curAction = 0, nextAction = -1;
+		
 		public float [] standTrackTime = {0, 0};
 		public float [] walkTrackTime = {0, 0};
 		public float [] runTrackTime = {0, 0};
@@ -120,8 +128,13 @@ public class AnimStateManager {
 		public SkPose poseTo;
 		public SkPose renderPose;	// final
 		
-		// 3 separate phase speed (stand, walk, run)
-		public float [] phaseSpeeds = {0, 0, 0};
+		public LocAnimState(int id, float enterSpeed, String [] actionNames, float [] actionTargetSpeeds) {
+			this.id = id;
+			this.enterSpeed = enterSpeed;
+			this.actionNames = actionNames.clone();
+			this.actionTargetSpeeds = actionTargetSpeeds.clone();
+			
+		}
 		
 		public LocAnimState(int id, String standName, String walkName, String runName, float walkSpeed, float runSpeed) {
 			this.id = id;
@@ -146,24 +159,32 @@ public class AnimStateManager {
 		@Override
 		public void update(float dt) {
 			lastInterp = interp;
-			// calculate phase speed
-			if (moveSpeed <= walkSpeed) {
-				// stand <-> walk
-				status = STAND_TO_WALK;
-				interp = moveSpeed/walkSpeed;
-				phaseSpeed = (1.0f-interp) * phaseSpeeds[0] + interp * phaseSpeeds[1];
-			} else if (moveSpeed > walkSpeed && moveSpeed <= runSpeed) {
-				// walk <-> run
-				status = WALK_TO_RUN;
-				interp = (moveSpeed - walkSpeed) / (runSpeed - walkSpeed);
-				phaseSpeed = (1.0f-interp) * phaseSpeeds[1] + interp * phaseSpeeds[2];
-			} else {
-				// run -> run faster
-				status = RUN_FASTER;
-				interp = moveSpeed / runSpeed;
-				phaseSpeed = phaseSpeeds[2] * interp;	// multiply
-			}
 			
+			// can't move if we got < 2
+			if (actionTargetSpeeds.length < 2)
+				return;
+			// generalized form
+			for (int i=0; i<actionTargetSpeeds.length; i++) {
+				// we grab the closest targetSpeed
+				if (i < actionTargetSpeeds.length-1) {
+					// we're still in 2 range
+					if (moveSpeed >= actionTargetSpeeds[i] && moveSpeed < actionTargetSpeeds[i+1]) {
+						curAction = i;
+						nextAction = i+1;
+						interp = (moveSpeed - actionTargetSpeeds[i]) / (actionTargetSpeeds[i+1] - actionTargetSpeeds[i]);
+						phaseSpeed = (1.0f-interp) * phaseSpeeds[i] + interp * phaseSpeeds[i+1];
+						// break outta here
+						break;
+					}
+				} else if (i == actionTargetSpeeds.length-1) {
+					// we're at last range
+					curAction = i;
+					nextAction = -1;
+					interp = moveSpeed / actionTargetSpeeds[i];
+					phaseSpeed = phaseSpeeds[i] * interp;
+				}				
+			}
+//			
 			// update as usual
 			phase += phaseSpeed * dt;
 			phase = MathHelper.wrapFloat01(phase);
@@ -182,29 +203,15 @@ public class AnimStateManager {
 			r_interp = MathHelper.clamp(r_interp, 0, 1);
 			
 			// depending on what states of animation we are
-			if (status == STAND_TO_WALK) {
-				poseFrom.calculateCubic(standId, MathHelper.phaseToRenderTime(renderPhase, standTrackTime));
-				poseTo.calculateCubic(walkId, MathHelper.phaseToRenderTime(renderPhase, walkTrackTime));
+			if (curAction >= 0 && nextAction >= 0) {
+				// got two animation, blend em
+				poseFrom.calculateCubic(actionIds[curAction], MathHelper.phaseToRenderTime(renderPhase, trackTimes[curAction]));
+				poseTo.calculateCubic(actionIds[nextAction], MathHelper.phaseToRenderTime(renderPhase, trackTimes[nextAction]));
 				
-//				poseFrom.calculateLinear(standId, MathHelper.phaseToRenderTime(renderPhase, standTrackTime));
-//				poseTo.calculateLinear(walkId, MathHelper.phaseToRenderTime(renderPhase, walkTrackTime));
-				
-				// blend em
-				SkPose.blendPose(poseFrom, poseTo, r_interp, renderPose);
-			} else if (status == WALK_TO_RUN) {
-				poseFrom.calculateCubic(walkId, MathHelper.phaseToRenderTime(renderPhase, walkTrackTime));
-				poseTo.calculateCubic(runId, MathHelper.phaseToRenderTime(renderPhase, runTrackTime));
-				
-//				poseFrom.calculateLinear(walkId, MathHelper.phaseToRenderTime(renderPhase, walkTrackTime));
-//				poseTo.calculateLinear(runId, MathHelper.phaseToRenderTime(renderPhase, runTrackTime));
-				
-				// blend em
 				SkPose.blendPose(poseFrom, poseTo, r_interp, renderPose);
 			} else {
-				// mmust be run faster
-				renderPose.calculateCubic(runId, MathHelper.phaseToRenderTime(renderPhase, runTrackTime));
-				
-//				renderPose.calculateLinear(runId, MathHelper.phaseToRenderTime(renderPhase, runTrackTime));
+				// single animation
+				renderPose.calculateCubic(actionIds[curAction], MathHelper.phaseToRenderTime(renderPhase, trackTimes[curAction]));
 			}
 		}
 		
@@ -215,21 +222,36 @@ public class AnimStateManager {
 		
 		@Override
 		public void setup(Skeleton skel) {
-			standId = skel.getAnimation().getActionId(standName);
-			walkId = skel.getAnimation().getActionId(walkName);
-			runId = skel.getAnimation().getActionId(runName);
-			
-			Action actStand = skel.getAnimation().getActionById(standId);
-			Action actWalk = skel.getAnimation().getActionById(walkId);
-			Action actRun = skel.getAnimation().getActionById(runId);
-			
-			actStand.getTrackTime(standTrackTime);
-			actWalk.getTrackTime(walkTrackTime);
-			actRun.getTrackTime(runTrackTime);
-			
-			this.phaseSpeeds[0] = 60.0f/actStand.getFrameCount();
-			this.phaseSpeeds[1] = 60.0f/actWalk.getFrameCount();
-			this.phaseSpeeds[2] = 60.0f/actRun.getFrameCount();
+//			standId = skel.getAnimation().getActionId(standName);
+//			walkId = skel.getAnimation().getActionId(walkName);
+//			runId = skel.getAnimation().getActionId(runName);
+//			
+			this.actionIds = new int[actionNames.length];
+			this.trackTimes = new float[actionNames.length][2];
+			this.phaseSpeeds = new float[actionNames.length];
+			// grab remaining data
+			for (int i=0; i<actionIds.length; i++) {
+				// set action id
+				actionIds[i] = skel.getAnimation().getActionId(actionNames[i]);
+				Action act = skel.getAnimation().getActionByName(actionNames[i]);
+				
+				// set track time
+				act.getTrackTime(trackTimes[i]);
+				
+				// phase speed
+				phaseSpeeds[i] = 60.0f/act.getFrameCount();
+			}
+//			Action actStand = skel.getAnimation().getActionById(standId);
+//			Action actWalk = skel.getAnimation().getActionById(walkId);
+//			Action actRun = skel.getAnimation().getActionById(runId);
+//			
+//			actStand.getTrackTime(standTrackTime);
+//			actWalk.getTrackTime(walkTrackTime);
+//			actRun.getTrackTime(runTrackTime);
+//			
+//			this.phaseSpeeds[0] = 60.0f/actStand.getFrameCount();
+//			this.phaseSpeeds[1] = 60.0f/actWalk.getFrameCount();
+//			this.phaseSpeeds[2] = 60.0f/actRun.getFrameCount();
 			
 			poseFrom = new SkPose(skel);
 			poseTo = new SkPose(skel);
@@ -326,7 +348,8 @@ public class AnimStateManager {
 		states.add(new LoopAnimState(ANIMSTATE_IDLE, 2.0f, "idle"));
 		
 		// the move state
-		states.add(new LocAnimState(ANIMSTATE_MOVING, "stand", "walk", "run", 1.5f, 5.0f));
+//		states.add(new LocAnimState(ANIMSTATE_MOVING, "stand", "walk", "run", 1.5f, 5.0f));
+		states.add(new LocAnimState(ANIMSTATE_MOVING, 3.0f, new String[]{"stand",  "walk", "run"}, new float[]{0.0f, 1.5f, 5.0f}));
 		
 		// the slide
 		states.add(new SlideAnimState(ANIMSTATE_SLIDE_TO_STOP, "slide2stop", 5.0f, 0.0f));

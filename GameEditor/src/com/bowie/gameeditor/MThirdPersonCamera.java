@@ -95,7 +95,7 @@ public class MThirdPersonCamera extends BaseModel {
 			updateCamOffset(dt);
 			
 			// we have something to track on
-			// calculate our lookat to target
+			// calculate our lookat to target 
 			ref.rot.transformVector(lookAtOffset, targetCamLookAt);
 			Vector3.add(targetCamLookAt, ref.pos, targetCamLookAt);
 			// move it

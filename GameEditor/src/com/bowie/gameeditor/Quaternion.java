@@ -83,6 +83,29 @@ public class Quaternion {
 		c.w = a.w + b.w;
 	}
 	
+	public static Quaternion calculateSpin(Vector3 angVel, Quaternion rot) {
+		tmp0.x = angVel.x;
+		tmp0.y = angVel.y;
+		tmp0.z = angVel.z;
+		tmp0.w = 0;
+		
+		tmp0.scale(0.5f);
+		
+		Quaternion.mul(tmp0, rot, tmp0);
+		return new Quaternion(tmp0);
+	}
+	
+	public void scale(float a) {
+		x *= a;
+		y *= a;
+		z *= a;
+		w *= a;
+	}
+	
+	public static float dot(Quaternion a, Quaternion b) {
+		return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;
+	}
+	
 	public static void mul(Quaternion a, Quaternion b, Quaternion c) {
 		//tmp0 = vA
 		tmpV0.x = a.x;

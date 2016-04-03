@@ -133,7 +133,7 @@ public class MeshView extends Screen {
 		cam.setFov(90.0f);
 		cam.setZoomPerPixel(0.5f);
 		cam.setLookAtOffset(new Vector3(0, 1.5f, 0));
-		cam.setTargetZoomDist(1.5f);
+		cam.setTargetZoomDist(2.5f);
 		cam.setTargetYRot((float) Math.toRadians(45.0f));
 		cam.setElasticity(12.0f);
 		camControl = new CThirdPersonCamera(cam);
