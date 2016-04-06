@@ -19,6 +19,7 @@ public class VActorRenderer extends BaseView {
 	@Override
 	public void preRender(GL2 gl, float dt) {
 		AnimStateManager animState = ref.getAnimState();
+		// calculate render pose
 		if (animState != null)
 			animState.preRender(dt);
 		// grab render matrix from actor physics data

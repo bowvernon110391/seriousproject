@@ -1,6 +1,7 @@
 package com.bowie.gameeditor;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -33,12 +34,12 @@ public class Editor implements ScriptCmdListener {
 	
 	//editor settings
 	//--playback and timer
-	private long timeLast = System.currentTimeMillis();
+	private long timeLast = System.nanoTime(); //System.currentTimeMillis();
 	private long fpsTimer = 0;
 	private int fpsCount = 0;
 	private float timeElapsed = 0.0f;
 	
-	private int tickPerSec = 30;	//30 FPS update rate
+	private int tickPerSec = 60;	//30 FPS update rate
 	private int renderPerSec = 60;	//50 FPS render rate
 	
 	//editor stat
@@ -121,6 +122,10 @@ public class Editor implements ScriptCmdListener {
 		//also, start the fps animator
 		ticker = new FPSAnimator(canvas, renderPerSec, true);
 		ticker.start();
+		
+		// let's see local path
+		File f = new File("./shit.txt");
+		System.out.println(f.getAbsolutePath());
 	}
 	
 	public GL2 getContext() {
@@ -184,10 +189,10 @@ public class Editor implements ScriptCmdListener {
 	//this do the drawing
 	public void canvasDraw(GL2 gl) {
 		//update first
-		long timeCurrent = System.currentTimeMillis();
+		long timeCurrent = System.nanoTime(); //System.currentTimeMillis();
 		long deltaTime = timeCurrent - timeLast;
 		fpsTimer += deltaTime;
-		timeElapsed += (float)deltaTime/1000.0f;
+		timeElapsed += (float)deltaTime/1000000000.0f;
 		float tickDt = 1.0f/(float)tickPerSec;
 		timeLast = timeCurrent;
 		
@@ -205,10 +210,12 @@ public class Editor implements ScriptCmdListener {
 		if (activeScreen >= 0) {
 			views[activeScreen].onDraw(gl, timeElapsed);
 			fpsCount ++;
+			
+			System.out.println("phase left: " + (timeElapsed/tickDt));
 		}
 		
 		// display fps
-		if (fpsTimer >= 1000) {
+		if (fpsTimer >= 1000000000) {
 			fpsTimer = 0; // reset
 			System.out.print("FPS: " + fpsCount + "\r");
 			fpsCount = 0;

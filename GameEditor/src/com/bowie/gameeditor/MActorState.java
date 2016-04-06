@@ -22,14 +22,17 @@ public class MActorState extends BaseModel {
 	public Vector3 pos = new Vector3();
 	public Vector3 vel = new Vector3();
 	public Vector3 targetVel = new Vector3();
-	public float accel = 7.0f;
+	public float accel = 3.0f;
 	public float maxVel = 8.0f;	// standard
 	
 	public float width = 0.6f;		
 	public float height = 1.85f;
 	public Quaternion rot = new Quaternion();	// to hold rotation data
 	public Quaternion targetRot = new Quaternion();	// where should I look
-	public float rotSpeed = 5.0f;			// how quick do we turn?
+	public float rotSpeed = 10.0f;			// how quick do we turn?
+	public float leanSpeed = 0;
+	public float targetLean = 0;
+	public float maxLean = (float) (50.0f/180.0f * Math.PI);
 	
 	// must be replaced by state machine!!
 	public int state = STATE_IDLE;
@@ -58,20 +61,23 @@ public class MActorState extends BaseModel {
 			if (Vector3.dot(targetVel, targetVel) > Vector3.EPSILON)
 				this.setState(STATE_MOVING);
 		} else if (state == STATE_MOVING) {
-			// calculate difference between target and current velocity
-			Vector3 targetDiff = Vector3.tmp0;
-			Vector3.sub(targetVel, vel, targetDiff);
+			// we capture our current "right" vector
+			Vector3 oldVec = Vector3.tmp0;
+			oldVec.setTo(vel);
+			oldVec.normalize();
 			
-			Vector3 targetDir = Vector3.tmp1;
-			targetDir.setTo(targetDiff);
-			targetDir.normalize();
+			Vector3 oldRight = Vector3.tmp1;
+			oldRight.x = oldVec.z;
+			oldRight.y = 0;
+			oldRight.z = -oldVec.x;			
 			
-			float f_accel = Math.min(targetVel.length(), accel);
+			// move our vel to target velo
+			if (targetVel.length() > Vector3.EPSILON) {
+				vel.x += (targetVel.x-vel.x) * accel * dt;
+				vel.y += (targetVel.y-vel.y) * accel * dt;
+				vel.z += (targetVel.z-vel.z) * accel * dt;
+			}
 			
-			targetDir.scale(accel * dt);
-			
-			// add to current velocity
-			Vector3.add(vel, targetDir, vel);
 			
 			// cap velocity
 			float vLen = vel.length();
@@ -80,10 +86,18 @@ public class MActorState extends BaseModel {
 				vel.scale(vLen);
 			}
 			
-			// inform animstate
-			if (animState != null) {
-				animState.setMoveSpeed(vel.length());
+			// got it
+			oldVec.setTo(vel);
+			oldVec.normalize();
+			
+			targetLean = 0;
+			
+			if (vel.length() > 3) {
+				targetLean = (vel.x * oldRight.x + vel.z * oldRight.z) * maxLean;
 			}
+			
+			// tell about our velocity
+			System.out.println(String.format("v: %f,  %f, %f = %f <-> %f", vel.x, vel.y, vel.z, vel.length(), leanSpeed));
 			
 			// rotate based on shit
 			if (Vector3.dot(vel, vel) > Vector3.EPSILON) {
@@ -99,6 +113,11 @@ public class MActorState extends BaseModel {
 				targetRot = Quaternion.makeAxisRot(rotAxis, (float) Math.atan2(dir.x, dir.z));
 			}
 			
+			// inform animstate
+			if (animState != null) {
+				animState.setMoveSpeed(vel.length());
+			}
+			
 			// wait are we stopping?
 			if (Vector3.dot(targetVel, targetVel) <= Vector3.EPSILON) {
 				// how fast are we moving?
@@ -107,9 +126,11 @@ public class MActorState extends BaseModel {
 //					state = STATE_SLIDE_TO_STOP;
 					this.setState(STATE_SLIDE_TO_STOP);
 				} else if (spdSqr >= 0.01f * maxVel * maxVel) {
-					// still moving, but slow down
-					vel.x *= 0.75f;
-					vel.z *= 0.75f;
+					float velen = (float) Math.sqrt(vel.x * vel.x + vel.z * vel.z);
+					if (velen > Vector3.EPSILON) {
+						vel.x -= vel.x/velen * 6 * dt;
+						vel.z -= vel.z/velen * 6 * dt;
+					}
 				} else {
 //					state = STATE_IDLE;
 					this.setState(STATE_IDLE);
@@ -125,8 +146,11 @@ public class MActorState extends BaseModel {
 				this.setState(STATE_IDLE);
 			}
 			// half our speed to the stopping point
-			vel.x *= 0.875f;
-			vel.z *= 0.875f;
+			float velen = (float) Math.sqrt(vel.x * vel.x + vel.z * vel.z);
+			if (velen > Vector3.EPSILON) {
+				vel.x -= vel.x/velen * accel * 3.f * dt;
+				vel.z -= vel.z/velen * accel * 3.f * dt;
+			}
 		}
 		
 		// position needs updating never the less
@@ -144,6 +168,7 @@ public class MActorState extends BaseModel {
 		Quaternion.slerp(rot, targetRot, Math.min(1, rotSpeed * dt), rot);
 		rot.normalize();
 //		System.out.println("State: " + state);
+		this.leanSpeed += (targetLean - leanSpeed) * accel * dt;
 		
 		// update animation state
 		if (animState != null) 
@@ -160,6 +185,22 @@ public class MActorState extends BaseModel {
 		Quaternion newRot = Quaternion.tmp0;
 		Quaternion.slerp(rot, targetRot, Math.min(1, rotSpeed * dt), newRot);
 		newRot.normalize();
+		
+		// rotate on the z component
+		
+		Vector3 front = Vector3.tmp1;
+		front.x = 0;
+		front.y = 0;
+		front.z = 1;
+		
+		newRot.transformVector(front, front);
+		
+		float newLean = leanSpeed + (targetLean - leanSpeed) * accel * dt;
+		
+		Quaternion leanRot = Quaternion.makeAxisRot(front, -newLean);
+		Quaternion.mul(leanRot, newRot, newRot);
+		
+		
 		
 		res.fromQuatVec3(newRot, newPos);
 	}

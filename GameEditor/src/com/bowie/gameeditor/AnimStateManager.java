@@ -50,6 +50,11 @@ public class AnimStateManager {
 		}
 		
 		@Override
+		public void onExit() {
+			this.phase = 0;
+		}
+		
+		@Override
 		public void setup(Skeleton skel) {
 			actionId = skel.getAnimation().getActionId(actionName);
 			Action act = skel.getAnimation().getActionById(actionId);
@@ -300,7 +305,7 @@ public class AnimStateManager {
 			// calculate phase
 			phase = (moveSpeed - slideStartSpeed) / (slideEndSpeed - slideStartSpeed);
 			// cap em
-			phase = phase < Vector3.EPSILON ? Vector3.EPSILON : phase >= (1-Vector3.EPSILON) ? (1-Vector3.EPSILON) : phase;
+			phase = MathHelper.clamp(phase, 0, 1);
 			
 //			System.out.println("AS_SLIDE: " + phase);
 		}
@@ -309,10 +314,7 @@ public class AnimStateManager {
 		public void preRender(float dt) {
 			// interpolate, calculate pose
 			renderPhase = phase + (phase-lastPhase) * dt;
-			renderPhase = renderPhase < 0 ? 0 : renderPhase > 1 ? 1 : renderPhase;
-			
-			// calculate cosine interpolation value
-			renderPhase = MathHelper.cosineInterpolation(0, 1, renderPhase);
+			renderPhase = MathHelper.clamp(renderPhase, 0, 1);
 			
 			// now do it
 			renderPose.calculateLinear(actionId, MathHelper.phaseToRenderTime(renderPhase, trackTime));
